@@ -19,7 +19,10 @@ app.use(cookieParser());
 
 // Cấu hình CORS - Cho phép nhận Token Cookie từ Next.js
 app.use(cors({
-  origin: 'http://localhost:3000', // Frontend Domain
+  origin: [
+    'http://localhost:3000', 
+    'https://next-me-opal.vercel.app' // Thêm tên miền Vercel của bạn
+  ],
   credentials: true, // BẮT BUỘC để nhận/gửi Cookie
 }));
 

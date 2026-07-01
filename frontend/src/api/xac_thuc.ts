@@ -1,6 +1,9 @@
 import { DuLieuDangNhap, DuLieuDangKy, PhanHoiApi } from "@/types/xac_thuc";
 
-const API_URL = "http://localhost:5000/api/xac-thuc";
+// Sử dụng biến môi trường NEXT_PUBLIC_API_URL khi đưa lên Vercel. 
+// Nếu không có, mặc định chạy localhost:5000 cho lúc code ở máy cá nhân.
+const BACKEND_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:10000";
+const API_URL = `${BACKEND_URL}/api/xac-thuc`;
 
 export async function goiDangNhap(duLieu: DuLieuDangNhap): Promise<PhanHoiApi> {
   const response = await fetch(`${API_URL}/dang-nhap`, {
