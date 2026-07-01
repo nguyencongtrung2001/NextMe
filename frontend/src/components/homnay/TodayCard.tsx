@@ -39,7 +39,6 @@ interface TodayCardProps {
 
 export default function TodayCard({ challenge, todayLog, currentDay }: TodayCardProps) {
   const completed = !!todayLog;
-  const streakEmoji = challenge.streak >= 7 ? "🔥 " : challenge.streak <= 2 ? "🌱 " : "";
 
   let flowerClass = "bg-amber-100";
   if (challenge.flower.type === "lavender") flowerClass = "bg-slate-100 dark:bg-stone-850";
@@ -67,7 +66,6 @@ export default function TodayCard({ challenge, todayLog, currentDay }: TodayCard
 
           <div className="flex-1 min-w-0">
             <h4 className="font-serif text-sm md:text-base font-bold text-ink leading-tight truncate group-hover:text-primary transition-colors">
-              {streakEmoji}
               {challenge.title}
             </h4>
             <div className="flex items-center gap-2 mt-1">

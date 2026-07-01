@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Lora, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import Navbar from "@/components/layout/Navbar";
 
 const inter = Inter({
   subsets: ["latin", "vietnamese"],
@@ -44,7 +43,6 @@ export default function RootLayout({
           jetbrainsMono.variable
         )}
       >
-        <Navbar />
         {children}
       </body>
     </html>

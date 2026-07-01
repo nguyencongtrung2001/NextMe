@@ -11,6 +11,7 @@ export default function Navbar() {
     { href: "/", label: "Trang chủ" },
     { href: "/challenges", label: "Danh sách Thử thách" },
     { href: "/today", label: "Hôm nay" },
+    { href: "/garden", label: "Vườn hoa" },
   ];
 
   return (
