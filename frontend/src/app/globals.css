@@ -89,7 +89,7 @@
   --popover: #FFFFFF;
   --popover-foreground: #3D3530;
   
-  --primary: #E8833D;
+  --primary: #2563EB;
   --primary-foreground: #FFFFFF;
   
   --secondary: #F7F3EF;
@@ -101,7 +101,7 @@
   --destructive: oklch(0.577 0.245 27.325);
   --border: #DDD4CB;
   --input: #DDD4CB;
-  --ring: #E8833D;
+  --ring: #2563EB;
   
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
@@ -112,12 +112,12 @@
   
   --sidebar: #FDFAF7;
   --sidebar-foreground: #1C1917;
-  --sidebar-primary: #E8833D;
+  --sidebar-primary: #2563EB;
   --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #F7F3EF;
   --sidebar-accent-foreground: #1C1917;
   --sidebar-border: #DDD4CB;
-  --sidebar-ring: #E8833D;
+  --sidebar-ring: #2563EB;
 
   /* Custom variables */
   --ink: #1C1917;
@@ -130,9 +130,9 @@
   --surface-2: #F7F3EF;
   --surface-3: #F0EBE5;
   
-  --primary-soft: #F4A85E;
-  --primary-bg: #FFF4ED;
-  --primary-border: #FCD8C0;
+  --primary-soft: #3B82F6;
+  --primary-bg: #EFF6FF;
+  --primary-border: #BFDBFE;
   
   --sage: #7C9F80;
   --sage-bg: #F2F7F3;
@@ -151,8 +151,8 @@
   --popover: #262220;
   --popover-foreground: #F7F3EF;
   
-  --primary: #F4A85E;
-  --primary-foreground: #1C1917;
+  --primary: #3B82F6;
+  --primary-foreground: #FFFFFF;
   
   --secondary: #35302E;
   --secondary-foreground: #FDFAF7;
@@ -163,16 +163,16 @@
   --destructive: oklch(0.704 0.191 22.216);
   --border: #4A3E39;
   --input: #4A3E39;
-  --ring: #F4A85E;
+  --ring: #3B82F6;
   
   --sidebar: #1C1917;
   --sidebar-foreground: #FDFAF7;
-  --sidebar-primary: #F4A85E;
-  --sidebar-primary-foreground: #1C1917;
+  --sidebar-primary: #3B82F6;
+  --sidebar-primary-foreground: #FFFFFF;
   --sidebar-accent: #35302E;
   --sidebar-accent-foreground: #FDFAF7;
   --sidebar-border: #4A3E39;
-  --sidebar-ring: #F4A85E;
+  --sidebar-ring: #3B82F6;
 
   /* Custom variables in dark mode */
   --ink: #FDFAF7;
@@ -185,9 +185,9 @@
   --surface-2: #35302E;
   --surface-3: #4A3E39;
   
-  --primary-soft: #E8833D;
-  --primary-bg: #2C1E16;
-  --primary-border: #4D3222;
+  --primary-soft: #60A5FA;
+  --primary-bg: #172554;
+  --primary-border: #1E3A8A;
   
   --sage: #9CBF9E;
   --sage-bg: #1B241D;

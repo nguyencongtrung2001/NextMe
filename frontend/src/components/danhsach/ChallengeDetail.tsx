@@ -143,7 +143,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
 
 
   const triggerConfetti = () => {
-    const colors = ["#E8833D", "#F4A85E", "#7C9F80", "#E58C7C", "#FCD8C0"];
+    const colors = ["#2563EB", "#3B82F6", "#7C9F80", "#E58C7C", "#BFDBFE"];
     const newPetals = Array.from({ length: 35 }, (_, i) => ({
       id: i,
       left: Math.random() * 100,
@@ -569,7 +569,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
                   <div className="flex justify-end mt-2">
                     <Button
                       onClick={handleCompleteToday}
-                      className="bg-primary hover:bg-primary-soft text-primary-foreground font-bold px-6 py-2.5 rounded-xl shadow-[0_4px_12px_rgba(232,131,61,0.25)] hover:shadow-[0_6px_16px_rgba(232,131,61,0.35)] transition-all duration-200 hover:-translate-y-0.5 cursor-pointer w-full sm:w-auto"
+                      className="bg-primary hover:bg-primary-soft text-primary-foreground font-bold px-6 py-2.5 rounded-xl shadow-[0_4px_12px_rgba(37,99,235,0.25)] hover:shadow-[0_6px_16px_rgba(37,99,235,0.35)] transition-all duration-200 hover:-translate-y-0.5 cursor-pointer w-full sm:w-auto"
                     >
                       <CheckCircle2 className="w-4 h-4 mr-1.5" />
                       <span>Tick hoàn thành ngày hôm nay</span>

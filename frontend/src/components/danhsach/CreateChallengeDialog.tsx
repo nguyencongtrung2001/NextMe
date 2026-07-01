@@ -45,7 +45,7 @@ export default function CreateChallengeDialog({
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger
         render={
-          <Button className="bg-primary hover:bg-primary-soft text-primary-foreground font-bold px-5 py-2.5 rounded-xl shadow-[0_4px_12px_rgba(232,131,61,0.25)] hover:shadow-[0_6px_16px_rgba(232,131,61,0.35)] transition-all duration-200 hover:-translate-y-0.5 cursor-pointer">
+          <Button className="bg-primary hover:bg-primary-soft text-primary-foreground font-bold px-5 py-2.5 rounded-xl shadow-[0_4px_12px_rgba(37,99,235,0.25)] hover:shadow-[0_6px_16px_rgba(37,99,235,0.35)] transition-all duration-200 hover:-translate-y-0.5 cursor-pointer">
             <Plus className="w-4 h-4 mr-1.5 stroke-[2.5]" />
             <span>Tạo thử thách mới</span>
           </Button>

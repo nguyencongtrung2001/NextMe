@@ -26,7 +26,7 @@ export default function Navbar() {
               className={cn(
                 "rounded-full px-5 py-2 text-sm font-bold transition-all duration-200 whitespace-nowrap",
                 isActive
-                  ? "bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(232,131,61,0.25)]"
+                  ? "bg-primary text-primary-foreground shadow-[0_2px_8px_rgba(37,99,235,0.25)]"
                   : "text-ink-4 dark:text-ink-3 hover:text-ink-2 dark:hover:text-ink hover:bg-surface dark:hover:bg-surface-3"
               )}
             >

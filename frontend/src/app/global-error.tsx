@@ -31,7 +31,7 @@ export default function GlobalError({
         </div>
         <Button
           onClick={() => reset()}
-          className="bg-[#E8833D] hover:bg-[#F4A85E] text-white font-bold px-6 py-2.5 rounded-xl shadow-md cursor-pointer"
+          className="bg-primary hover:bg-primary-soft text-white font-bold px-6 py-2.5 rounded-xl shadow-md cursor-pointer"
         >
           <RotateCcw className="w-4 h-4 mr-2 inline" />
           Khôi phục ứng dụng
