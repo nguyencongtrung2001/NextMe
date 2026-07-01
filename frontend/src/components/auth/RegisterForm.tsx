@@ -1,21 +1,55 @@
 "use client";
 
 import { useState } from "react";
-import { Eye, EyeOff, UserPlus } from "lucide-react";
+import { Eye, EyeOff, UserPlus, AlertCircle, CheckCircle2 } from "lucide-react";
+import { goiDangKy } from "@/api/xac_thuc";
 
 export default function RegisterForm() {
+  const [name, setName] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
+  const [successMsg, setSuccessMsg] = useState("");
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-    // Simulate API call
-    setTimeout(() => setIsLoading(false), 1500);
+    setErrorMsg("");
+    setSuccessMsg("");
+    
+    try {
+      const res = await goiDangKy({ email, password, name });
+      setSuccessMsg(res.thongBao);
+      // Có thể xoá trống form sau khi đăng ký thành công
+      setEmail("");
+      setPassword("");
+      setName("");
+    } catch (error: any) {
+      setErrorMsg(error.message);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-4 animate-in fade-in zoom-in-95 duration-300">
+      
+      {errorMsg && (
+        <div className="flex items-center gap-2 p-3 text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl animate-fade-in">
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{errorMsg}</span>
+        </div>
+      )}
+
+      {successMsg && (
+        <div className="flex items-center gap-2 p-3 text-sm text-sage bg-sage-bg dark:bg-sage-900/30 border border-sage-border dark:border-sage-800 rounded-xl animate-fade-in">
+          <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+          <span>{successMsg} Vui lòng chuyển sang tab Đăng Nhập.</span>
+        </div>
+      )}
+
       <div className="flex flex-col gap-1.5">
         <label htmlFor="name" className="text-sm font-semibold text-slate-700 dark:text-slate-300">
           Họ và tên
@@ -23,6 +57,8 @@ export default function RegisterForm() {
         <input
           id="name"
           type="text"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
           placeholder="Nguyễn Văn A"
           required
           className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-slate-400"
@@ -36,6 +72,8 @@ export default function RegisterForm() {
         <input
           id="register-email"
           type="email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
           placeholder="name@example.com"
           required
           className="px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-slate-400"
@@ -50,6 +88,8 @@ export default function RegisterForm() {
           <input
             id="register-password"
             type={showPassword ? "text" : "password"}
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
             placeholder="••••••••"
             required
             className="w-full px-4 py-3 rounded-xl border border-slate-200 dark:border-slate-800 bg-white/50 dark:bg-slate-900/50 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500 transition-all placeholder:text-slate-400"
