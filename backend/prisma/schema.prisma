@@ -1,0 +1,111 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
+}
+
+model User {
+  id        Int         @id @default(autoincrement())
+  email     String      @unique
+  name      String?
+  avatarUrl String?
+  password  String      // Hãy đảm bảo hash password trước khi lưu
+  role      UserRole    @default(USER)
+  createdAt DateTime    @default(now()) @map("created_at")
+  challenges Challenge[]
+
+  @@map("users")
+}
+
+model Flower {
+  id         Int         @id @default(autoincrement())
+  nameFlower String      @unique @map("name_flower") // Ví dụ: "Hướng Dương", "Tulip"
+  type       String      @unique // Để map logic frontend: "sunflower", "lavender", "tulip"
+  emoji      String      // Lưu các emoji hiển thị: "🌻", "🪻", "🌷"
+  color      String      // Lưu mã màu css hoặc hex: "var(--amber)", "var(--rose)"
+  createdAt  DateTime    @default(now()) @map("created_at")
+  challenges Challenge[]
+
+  @@map("flowers")
+}
+
+model Challenge {
+  id                 String          @id @default(uuid()) @db.Uuid // Giữ UUID để bảo mật URL slug chi tiết thử thách
+  title              String
+  flowerId           Int             @map("flower_id")
+  flower             Flower          @relation(fields: [flowerId], references: [id], onDelete: Restrict)
+  status             ChallengeStatus @default(ACTIVE)
+  totalDays          Int             @default(30) @map("total_days")
+  completedDaysCount Int             @default(0) @map("completed_days_count")
+  streak             Int             @default(0)
+  progress           Int             @default(0)
+  startDate          DateTime        @default(now()) @map("start_date")
+  estimatedEndDate   DateTime        @map("estimated_end_date")
+  userId             Int             @map("user_id")
+  user               User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  historyLogs        HistoryLog[]
+  createdAt          DateTime        @default(now()) @map("created_at")
+  updatedAt          DateTime        @updatedAt @map("updated_at")
+
+  @@index([userId], map: "idx_challenges_user")
+  @@index([status, userId], map: "idx_challenges_status_user")
+  @@map("challenges")
+}
+
+model HistoryLog {
+  id          String      @id @default(uuid()) @db.Uuid
+  challengeId String      @db.Uuid @map("challenge_id")
+  challenge   Challenge   @relation(fields: [challengeId], references: [id], onDelete: Cascade)
+  day         Int         // Số ngày thứ mấy (Ví dụ: ngày 1, ngày 2, ngày 23...)
+  loggedDate  DateTime    @db.Date @map("logged_date") // Chỉ lưu YYYY-MM-DD để tránh lệch múi giờ khi check-in
+  status      DayStatus   @default(COMPLETED)          // Thường hễ log là đã COMPLETED ngày đó
+  mood        String?     // Đổi thành String để lưu trực tiếp "🔥 Cực sung" hoặc Enum nếu bạn tối ưu frontend
+  note        String?     @db.Text
+  mediaFiles  MediaFile[]
+  createdAt   DateTime    @default(now()) @map("created_at")
+  updatedAt   DateTime    @updatedAt @map("updated_at")
+
+  @@unique([challengeId, day]) // Một ngày trong một thử thách chỉ có duy nhất 1 log
+  @@unique([challengeId, loggedDate]) // Chống trùng lặp check-in 2 lần trong cùng 1 ngày thực tế
+  @@index([challengeId], map: "idx_history_logs_challenge")
+  @@index([challengeId, loggedDate], map: "idx_history_logs_challenge_date")
+  @@map("history_logs")
+}
+
+model MediaFile {
+  id        String     @id @default(uuid()) @db.Uuid
+  logId     String     @db.Uuid @map("log_id")
+  log       HistoryLog @relation(fields: [logId], references: [id], onDelete: Cascade)
+  type      MediaType  @default(IMAGE)
+  url       String     // URL của ảnh/video lưu trên Cloudinary/S3
+  name      String?
+  createdAt DateTime   @default(now()) @map("created_at")
+
+  @@index([logId], map: "idx_media_files_log")
+  @@map("media_files")
+}
+
+enum UserRole {
+  USER
+  ADMIN
+}
+
+enum ChallengeStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+}
+
+enum DayStatus {
+  COMPLETED
+  MISSED
+  PENDING
+}
+
+enum MediaType {
+  IMAGE
+  VIDEO
+}
