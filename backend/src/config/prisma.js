@@ -1,15 +1,22 @@
-const { PrismaClient } = require('@prisma/client');
+// src/config/prisma.js
+const { PrismaClient } = require("@prisma/client");
+const { Pool } = require("pg");
+const { PrismaPg } = require("@prisma/adapter-pg");
 
-// Khởi tạo và ép Prisma đọc chính xác biến môi trường DATABASE_URL
-const prisma = global.prisma || new PrismaClient({
-  datasources: {
-    db: {
-      url: process.env.DATABASE_URL,
-    },
-  },
+// 1. Khởi tạo Connection Pool từ thư viện pg thuần
+const pool = new Pool({ 
+  connectionString: process.env.DATABASE_URL,
+  // Khi chạy trên Cloud như Render, đôi khi bạn cần bật SSL cho PostgreSQL
+  ssl: process.env.NODE_ENV === "production" ? { rejectUnauthorized: false } : false
 });
 
-if (process.env.NODE_ENV !== 'production') {
+// 2. Bọc pool trong Adapter của Prisma
+const adapter = new PrismaPg(pool);
+
+// 3. Khởi tạo Prisma Client với Adapter
+const prisma = global.prisma || new PrismaClient({ adapter });
+
+if (process.env.NODE_ENV !== "production") {
   global.prisma = prisma;
 }
 
