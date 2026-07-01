@@ -1,12 +1,14 @@
 import type { Metadata } from "next";
-import { Lora, Plus_Jakarta_Sans, JetBrains_Mono } from "next/font/google";
+import { Lora, Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import Navbar from "@/components/layout/Navbar";
 
-const plusJakartaSans = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ["latin", "vietnamese"],
-  variable: "--font-sans",
+  weight: ["400", "500", "600", "700", "800"],
+  display: "swap",
+  variable: "--font-inter",
 });
 
 const lora = Lora({
@@ -30,11 +32,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="vi" suppressHydrationWarning>
+    <html
+      lang="vi"
+      className={`h-full antialiased ${inter.variable}`}
+      suppressHydrationWarning
+    >
       <body
         className={cn(
           "min-h-full flex flex-col font-sans",
-          plusJakartaSans.variable,
           lora.variable,
           jetbrainsMono.variable
         )}

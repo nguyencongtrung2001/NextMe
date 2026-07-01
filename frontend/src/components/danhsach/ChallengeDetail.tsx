@@ -264,16 +264,6 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
         />
       ))}
 
-      {/* Back button */}
-      <div>
-        <Link
-          href="/challenges"
-          className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-3 hover:text-primary transition-colors duration-200"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Quay lại Danh sách</span>
-        </Link>
-      </div>
 
       {/* Detail Banner Card */}
       <div className="bg-card border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
