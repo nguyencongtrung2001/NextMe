@@ -6,7 +6,7 @@ const morgan = require('morgan');
 const cookieParser = require('cookie-parser');
 
 // Gọi các tuyến đường (Routes)
-const tuyenDuongXacThuc = require('./tuyen_duong/xac_thuc');
+const tuyenDuongXacThuc = require('./routes/xac_thuc');
 
 const app = express();
 const PORT = process.env.PORT || 5000;

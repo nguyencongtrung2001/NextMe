@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const dieuKhien = require('../dieu_khien/xac_thuc');
+const dieuKhien = require('../controllers/xac_thuc');
 
 // Tuyến đường xử lý Đăng Ký
 router.post('/dang-ky', dieuKhien.dangKy);
