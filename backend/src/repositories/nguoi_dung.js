@@ -1,6 +1,4 @@
-const { PrismaClient } = require('@prisma/client');
-const prisma = new PrismaClient();
-
+const prisma = require('../config/prisma');
 /**
  * Tầng Repository: Chỉ chịu trách nhiệm giao tiếp với Database (Prisma).
  * Tuyệt đối không chứa logic mã hóa hay bắt lỗi HTTP ở đây.
