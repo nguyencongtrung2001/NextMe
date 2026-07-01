@@ -1,0 +1,665 @@
+"use client";
+
+import { useState, useEffect } from "react";
+import Link from "next/link";
+import Image from "next/image";
+import { notFound } from "next/navigation";
+import {
+  ArrowLeft,
+  Flame,
+  Search,
+  Image as ImageIcon,
+  CheckCircle2,
+  Calendar,
+  X,
+  Loader2,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+
+export interface Flower {
+  name: string;
+  type: "sunflower" | "lavender" | "tulip";
+  color: string;
+  emoji: string;
+}
+
+export interface Challenge {
+  id: string;
+  title: string;
+  status: "active" | "completed";
+  totalDays: number;
+  completedDaysCount: number;
+  streak: number;
+  progress: number;
+  startDate: string;
+  estimatedEndDate: string;
+  flower: Flower;
+}
+
+export interface Log {
+  id: string;
+  day: number;
+  date: string;
+  mood: string;
+  note: string;
+  media: { type: "image" | "video"; url: string }[];
+}
+
+function calcCurrentDay(startDateStr: string, totalDays: number) {
+  const start = new Date(startDateStr);
+  const now = new Date();
+  const diffTime = Math.abs(now.getTime() - start.getTime());
+  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  return Math.min(diffDays + 1, totalDays);
+}
+
+function formatDate(isoString: string) {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  const day = date.getDate().toString().padStart(2, "0");
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const year = date.getFullYear();
+  return `${day}/${month}/${year}`;
+}
+
+interface ChallengeDetailProps {
+  slug: string;
+}
+
+const MOOD_LIST = [
+  { emoji: "🔥", label: "Cực sung", dataMood: "sung" },
+  { emoji: "✨", label: "Tuyệt vời", dataMood: "tot" },
+  { emoji: "🌱", label: "Bình thường", dataMood: "binhthuong" },
+  { emoji: "🌧️", label: "Hơi mệt", dataMood: "met" },
+  { emoji: "🥀", label: "Rất mệt", dataMood: "ratmet" },
+];
+
+const styles = `
+  @keyframes fall {
+    0% { transform: translateY(-5vh) rotate(0deg); opacity: 1; }
+    100% { transform: translateY(105vh) rotate(360deg); opacity: 0; }
+  }
+  .animate-fall {
+    position: fixed;
+    top: -5vh;
+    animation: fall linear forwards;
+    z-index: 9999;
+    pointer-events: none;
+    border-radius: 50% 0 50% 50%;
+  }
+`;
+
+export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
+  const [challenge, setChallenge] = useState<Challenge | null>(null);
+  const [challengeLogs, setChallengeLogs] = useState<Log[]>([]);
+  const [isLoaded, setIsLoaded] = useState(false);
+  const [activeTab, setActiveTab] = useState<"overview" | "history">("overview");
+
+  // Heatmap detail panel selection
+  const [selectedDay, setSelectedDay] = useState<number | null>(null);
+  const [selectedDayLog, setSelectedDayLog] = useState<Log | null>(null);
+
+  // Today logger states
+  const [selectedMood, setSelectedMood] = useState("Cực sung");
+  const [noteText, setNoteText] = useState("");
+  const [mediaFiles, setMediaFiles] = useState<{ type: "image" | "video"; url: string }[]>([]);
+
+  // Search in timeline
+  const [searchQuery, setSearchQuery] = useState("");
+
+  // Confetti particles
+  const [petals, setPetals] = useState<{ id: number; left: number; color: string; duration: number; delay: number }[]>([]);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const allChallenges: Challenge[] = JSON.parse(localStorage.getItem("challenges_data") || "[]");
+      const current = allChallenges.find((c) => c.id === slug);
+
+      if (!current) {
+        notFound();
+        return;
+      }
+
+      const allLogs = JSON.parse(localStorage.getItem("challenges_logs") || "{}");
+      const currentLogs: Log[] = allLogs[slug] || [];
+
+      setChallenge(current);
+      setChallengeLogs(currentLogs);
+
+      // Default selected day is today
+      const todayNum = calcCurrentDay(current.startDate, current.totalDays);
+      setSelectedDay(todayNum);
+      const todayLog = currentLogs.find((l) => l.day === todayNum) || null;
+      setSelectedDayLog(todayLog);
+
+      setIsLoaded(true);
+    }, 0);
+
+    return () => clearTimeout(timer);
+  }, [slug]);
+
+
+
+  const triggerConfetti = () => {
+    const colors = ["#E8833D", "#F4A85E", "#7C9F80", "#E58C7C", "#FCD8C0"];
+    const newPetals = Array.from({ length: 35 }, (_, i) => ({
+      id: i,
+      left: Math.random() * 100,
+      color: colors[Math.floor(Math.random() * colors.length)],
+      duration: 2 + Math.random() * 3,
+      delay: Math.random() * 1.5,
+    }));
+    setPetals(newPetals);
+    setTimeout(() => {
+      setPetals([]);
+    }, 6000);
+  };
+
+  const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    const files = Array.from(e.target.files);
+    const newMedia = files.map((file) => {
+      const url = URL.createObjectURL(file);
+      const type = file.type.startsWith("video/") ? ("video" as const) : ("image" as const);
+      return { type, url };
+    });
+    setMediaFiles((prev) => [...prev, ...newMedia]);
+  };
+
+  const handleCompleteToday = () => {
+    if (!challenge) return;
+    const currentDay = calcCurrentDay(challenge.startDate, challenge.totalDays);
+
+    const newLog: Log = {
+      id: `log-${Date.now()}`,
+      day: currentDay,
+      date: new Date().toISOString(),
+      mood: selectedMood,
+      note: noteText.trim() || "Không có ghi chú.",
+      media: mediaFiles,
+    };
+
+    const updatedLogs = [...challengeLogs, newLog];
+    setChallengeLogs(updatedLogs);
+
+    // Save to LocalStorage
+    const allChallenges: Challenge[] = JSON.parse(localStorage.getItem("challenges_data") || "[]");
+    const updatedChallenges = allChallenges.map((c) => {
+      if (c.id === challenge.id) {
+        const completions = c.completedDaysCount + 1;
+        const newStreak = c.streak + 1;
+        const progress = Math.min(Math.round((completions / c.totalDays) * 100), 100);
+        return {
+          ...c,
+          completedDaysCount: completions,
+          streak: newStreak,
+          progress,
+          status: completions >= c.totalDays ? ("completed" as const) : c.status,
+        };
+      }
+      return c;
+    });
+
+    localStorage.setItem("challenges_data", JSON.stringify(updatedChallenges));
+
+    const allLogs = JSON.parse(localStorage.getItem("challenges_logs") || "{}");
+    allLogs[challenge.id] = updatedLogs;
+    localStorage.setItem("challenges_logs", JSON.stringify(allLogs));
+
+    // Update states
+    const currentUpdated = updatedChallenges.find((c) => c.id === challenge.id);
+    if (currentUpdated) {
+      setChallenge(currentUpdated);
+    }
+    setSelectedDayLog(newLog);
+    setNoteText("");
+    setMediaFiles([]);
+
+    // Confetti effect
+    triggerConfetti();
+  };
+
+  if (!isLoaded || !challenge) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-3 text-ink-3 dark:text-ink-4 w-full">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <p className="text-sm font-medium">Đang tải chi tiết thử thách...</p>
+      </div>
+    );
+  }
+
+  const currentDay = calcCurrentDay(challenge.startDate, challenge.totalDays);
+  const hasLogToday = challengeLogs.some((l) => l.day === currentDay);
+  const isChallengeCompleted = challenge.status === "completed";
+
+  // Filtered logs for history search
+  const filteredLogs = challengeLogs
+    .filter((log) => log.mood.toLowerCase().includes(searchQuery.toLowerCase()))
+    .sort((a, b) => b.day - a.day);
+
+  let flowerBannerClass = "bg-amber-100";
+  if (challenge.flower.type === "lavender") flowerBannerClass = "bg-slate-100 dark:bg-stone-850";
+  else if (challenge.flower.type === "tulip") flowerBannerClass = "bg-rose-100";
+
+  return (
+    <div className="flex flex-col gap-6 md:gap-8 w-full">
+      <style>{styles}</style>
+      
+      {/* Confetti Render */}
+      {petals.map((p) => (
+        <div
+          key={p.id}
+          className="animate-fall"
+          style={{
+            left: `${p.left}vw`,
+            backgroundColor: p.color,
+            width: "12px",
+            height: "12px",
+            animationDuration: `${p.duration}s`,
+            animationDelay: `${p.delay}s`,
+          }}
+        />
+      ))}
+
+      {/* Back button */}
+      <div>
+        <Link
+          href="/challenges"
+          className="inline-flex items-center gap-1.5 text-xs font-bold text-ink-3 hover:text-primary transition-colors duration-200"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Quay lại Danh sách</span>
+        </Link>
+      </div>
+
+      {/* Detail Banner Card */}
+      <div className="bg-card border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+        <div className="flex items-center gap-4 flex-wrap">
+          <div
+            className={cn(
+              "w-14 h-14 rounded-full flex items-center justify-center text-2xl border border-black/5 shrink-0 shadow-sm transition-transform duration-300 hover:animate-wobble cursor-pointer",
+              flowerBannerClass
+            )}
+          >
+            {challenge.flower.emoji}
+          </div>
+          
+          <div className="flex flex-col gap-1">
+            <div className="flex items-center gap-2">
+              <span
+                className={cn(
+                  "inline-flex items-center px-2 py-0.5 rounded-full text-xxs font-bold uppercase tracking-wide border",
+                  isChallengeCompleted
+                    ? "bg-sage-bg border-sage-border text-sage"
+                    : "bg-primary-bg border-primary-border text-primary"
+                )}
+              >
+                {isChallengeCompleted ? "Đã hoàn thành" : "Đang chạy"}
+              </span>
+            </div>
+            
+            <h2 className="font-serif text-xl md:text-2xl font-bold text-ink leading-tight">
+              {challenge.title}
+            </h2>
+            
+            <div className="text-ink-4 text-xs">
+              Bắt đầu: <strong>{formatDate(challenge.startDate)}</strong> - Kết thúc ước tính:{" "}
+              <strong>{formatDate(challenge.estimatedEndDate)}</strong>
+            </div>
+          </div>
+        </div>
+
+        {challenge.streak > 0 && (
+          <div className="flex shrink-0">
+            <div className="inline-flex items-center gap-1.5 bg-primary-bg border border-primary-border px-4 py-2 rounded-full text-sm font-bold text-primary font-mono shadow-sm">
+              <Flame className="w-4 h-4 animate-float" />
+              <span>{challenge.streak} ngày streak</span>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Tabs */}
+      <div className="flex flex-col gap-6">
+        <div className="flex border-b border-border gap-4 overflow-x-auto">
+          <button
+            onClick={() => setActiveTab("overview")}
+            className={cn(
+              "pb-3 text-sm font-bold border-b-2 transition-all duration-200 whitespace-nowrap cursor-pointer",
+              activeTab === "overview"
+                ? "border-primary text-primary"
+                : "border-transparent text-ink-4 hover:text-ink"
+            )}
+          >
+            Tổng quan & Hôm nay
+          </button>
+          <button
+            onClick={() => setActiveTab("history")}
+            className={cn(
+              "pb-3 text-sm font-bold border-b-2 transition-all duration-200 whitespace-nowrap cursor-pointer",
+              activeTab === "history"
+                ? "border-primary text-primary"
+                : "border-transparent text-ink-4 hover:text-ink"
+            )}
+          >
+            Nhật ký hành trình
+          </button>
+        </div>
+
+        {/* Tab 1: Overview */}
+        {activeTab === "overview" && (
+          <div className="flex flex-col gap-6 w-full animate-fade-up">
+            {/* Heatmap Grid Card */}
+            <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+              <div className="flex justify-between items-center flex-wrap gap-2">
+                <div>
+                  <h3 className="font-serif text-base md:text-lg font-bold text-ink">
+                    Bản đồ tiến độ hành trình
+                  </h3>
+                  <p className="text-ink-4 text-xs mt-0.5">Bấm chọn một ô ngày để xem nhật ký cụ thể.</p>
+                </div>
+                <div className="text-primary font-mono text-sm font-bold">
+                  Tiến độ: {challenge.progress}% ({challenge.completedDaysCount}/{challenge.totalDays} ngày)
+                </div>
+              </div>
+
+              {/* Lưới các ô ngày */}
+              <div className="grid grid-cols-5 sm:grid-cols-7 md:grid-cols-12 gap-2">
+                {Array.from({ length: challenge.totalDays }, (_, i) => {
+                  const dayNum = i + 1;
+                  const log = challengeLogs.find((l) => l.day === dayNum);
+                  const isSelected = selectedDay === dayNum;
+
+                  let cellClass = "bg-surface text-ink-4 border-border"; // locked
+
+                  if (dayNum > currentDay) {
+                    cellClass = "bg-surface-2 dark:bg-stone-850/50 text-ink-5 border-dashed cursor-not-allowed";
+                  } else if (dayNum === currentDay) {
+                    cellClass = log
+                      ? "bg-sage-bg border-2 border-sage text-sage font-bold"
+                      : "bg-primary-bg border-2 border-primary-soft text-primary font-bold animate-pulse";
+                  } else {
+                    cellClass = log
+                      ? "bg-sage-bg border-sage-border text-sage font-semibold"
+                      : "bg-rose-bg border-rose-border text-rose font-semibold";
+                  }
+
+                  return (
+                    <button
+                      key={dayNum}
+                      disabled={dayNum > currentDay}
+                      onClick={() => {
+                        setSelectedDay(dayNum);
+                        setSelectedDayLog(log || null);
+                      }}
+                      className={cn(
+                        "aspect-square rounded-lg border flex items-center justify-center text-xs font-bold transition-all duration-150 cursor-pointer hover:scale-108",
+                        cellClass,
+                        isSelected && "ring-2 ring-primary ring-offset-2 dark:ring-offset-stone-900 scale-105"
+                      )}
+                    >
+                      {dayNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {/* Chú giải màu sắc */}
+              <div className="flex flex-wrap gap-4 border-t border-surface-3 pt-4 text-xxs uppercase tracking-wider font-bold text-ink-3">
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3.5 h-3.5 rounded border border-sage-border bg-sage-bg" />
+                  <span>Đã xong</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3.5 h-3.5 rounded border border-rose-border bg-rose-bg" />
+                  <span>Bỏ lỡ</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3.5 h-3.5 rounded border-2 border-primary-soft bg-primary-bg" />
+                  <span>Hôm nay</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <div className="w-3.5 h-3.5 rounded border border-border border-dashed bg-surface-2 dark:bg-stone-850/50" />
+                  <span>Chưa mở</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Heatmap Detail Panel */}
+            {selectedDay !== null && (
+              <div
+                className={cn(
+                  "border rounded-xl p-4 md:p-5 flex flex-col gap-2.5 animate-fade-up bg-card",
+                  selectedDay > currentDay
+                    ? "border-border"
+                    : selectedDayLog
+                    ? "border-sage-border bg-sage-bg/30"
+                    : "border-rose-border bg-rose-bg/30"
+                )}
+              >
+                <div className="flex justify-between items-center border-b border-black/5 pb-2.5">
+                  <strong className="text-xs uppercase tracking-wider font-bold text-ink">
+                    Ngày thứ {selectedDay}
+                  </strong>
+                  {selectedDayLog && (
+                    <span className="text-xs font-bold text-sage px-2 py-0.5 rounded-md bg-sage-bg border border-sage-border">
+                      Cảm xúc: {selectedDayLog.mood}
+                    </span>
+                  )}
+                </div>
+                
+                {selectedDay > currentDay ? (
+                  <p className="text-xs text-ink-4">Ngày này chưa được mở khóa.</p>
+                ) : selectedDayLog ? (
+                  <div className="flex flex-col gap-2">
+                    <p className="text-xs md:text-sm text-ink-2 dark:text-ink italic leading-relaxed font-serif">
+                      &ldquo;{selectedDayLog.note}&rdquo;
+                    </p>
+                    {selectedDayLog.media && selectedDayLog.media.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {selectedDayLog.media.map((m, idx) => (
+                          <div key={idx} className="w-16 h-16 relative rounded-lg overflow-hidden border border-border">
+                            {m.type === "image" ? (
+                              <Image src={m.url} alt="logged media" fill className="object-cover" unoptimized />
+                            ) : (
+                              <video src={m.url} className="w-full h-full object-cover" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ) : (
+                  <p className="text-xs text-rose font-medium">Không có nhật ký cho ngày này (Đã bỏ lỡ).</p>
+                )}
+              </div>
+            )}
+
+            {/* Inline Quick Logger */}
+            {!isChallengeCompleted && !hasLogToday && (
+              <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
+                <h3 className="font-serif text-base md:text-lg font-bold text-ink flex items-center gap-2">
+                  <Calendar className="w-5 h-5 text-primary" />
+                  <span>Nhật ký ngày hôm nay (Ngày thứ {currentDay})</span>
+                </h3>
+
+                <div className="flex flex-col gap-4">
+                  {/* Mood selectors */}
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-ink-2 dark:text-ink uppercase tracking-wider">
+                      Cảm xúc của bạn hôm nay:
+                    </Label>
+                    <div className="flex flex-wrap gap-2">
+                      {MOOD_LIST.map((m) => {
+                        const isSelected = selectedMood === m.label;
+                        return (
+                          <button
+                            key={m.label}
+                            type="button"
+                            onClick={() => setSelectedMood(m.label)}
+                            className={cn(
+                              "flex flex-col items-center justify-center p-3 rounded-2xl border transition-all duration-200 cursor-pointer min-w-[70px] flex-1 bg-surface",
+                              isSelected
+                                ? "border-primary text-primary ring-2 ring-primary/10 font-bold scale-102"
+                                : "border-border text-ink-4 hover:text-ink-2 hover:border-primary-border"
+                            )}
+                          >
+                            <span className="text-xl mb-0.5">{m.emoji}</span>
+                            <span className="text-[10px] tracking-wider uppercase font-bold text-center">
+                              {m.label}
+                            </span>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Note textarea */}
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-ink-2 dark:text-ink uppercase tracking-wider">
+                      Ghi nhận nội dung cảm xúc:
+                    </Label>
+                    <textarea
+                      value={noteText}
+                      onChange={(e) => setNoteText(e.target.value)}
+                      placeholder="Hôm nay bạn đã làm được gì? Cảm thấy thế nào?"
+                      rows={3}
+                      className="w-full border border-border bg-surface text-ink p-3 rounded-lg text-xs leading-relaxed focus:outline-none focus:ring-1 focus:ring-primary resize-none"
+                    />
+                  </div>
+
+                  {/* Media uploads simulation */}
+                  <div className="flex flex-col gap-2">
+                    <Label className="text-xs font-bold text-ink-2 dark:text-ink uppercase tracking-wider">
+                      Thêm hình ảnh hoặc video:
+                    </Label>
+                    <input
+                      type="file"
+                      id="detail-media-input"
+                      accept="image/*,video/*"
+                      multiple
+                      onChange={handleMediaChange}
+                      className="hidden"
+                    />
+                    <div className="flex items-center gap-3">
+                      <Label
+                        htmlFor="detail-media-input"
+                        className="inline-flex items-center gap-1.5 border border-border bg-surface hover:bg-surface-3 text-ink-2 dark:text-ink hover:text-ink px-4 py-2 rounded-lg text-xs font-bold cursor-pointer transition-colors duration-200"
+                      >
+                        <ImageIcon className="w-3.5 h-3.5" />
+                        <span>Tải lên ảnh/video</span>
+                      </Label>
+                    </div>
+
+                    {mediaFiles.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {mediaFiles.map((m, idx) => (
+                          <div key={idx} className="w-16 h-16 relative rounded-lg overflow-hidden border border-border group">
+                            {m.type === "image" ? (
+                              <Image src={m.url} alt="upload preview" fill className="object-cover" unoptimized />
+                            ) : (
+                              <video src={m.url} className="w-full h-full object-cover" />
+                            )}
+                            <button
+                              type="button"
+                              onClick={() => setMediaFiles(prev => prev.filter((_, i) => i !== idx))}
+                              className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
+                            >
+                              <X className="w-3 h-3" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Complete Check-in button */}
+                  <div className="flex justify-end mt-2">
+                    <Button
+                      onClick={handleCompleteToday}
+                      className="bg-primary hover:bg-primary-soft text-primary-foreground font-bold px-6 py-2.5 rounded-xl shadow-[0_4px_12px_rgba(232,131,61,0.25)] hover:shadow-[0_6px_16px_rgba(232,131,61,0.35)] transition-all duration-200 hover:-translate-y-0.5 cursor-pointer w-full sm:w-auto"
+                    >
+                      <CheckCircle2 className="w-4 h-4 mr-1.5" />
+                      <span>Tick hoàn thành ngày hôm nay</span>
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Tab 2: History Timeline */}
+        {activeTab === "history" && (
+          <div className="flex flex-col gap-5 w-full animate-fade-up">
+            <div className="flex justify-between items-start md:items-center flex-col md:flex-row gap-4 border-b border-black/5 pb-3">
+              <div>
+                <h3 className="font-serif text-base md:text-lg font-bold text-ink">
+                  Nhật ký chi tiết
+                </h3>
+                <p className="text-ink-4 text-xs mt-0.5">Xem lại các ngày đã tích.</p>
+              </div>
+              <div className="relative w-full md:max-w-xs">
+                <Search className="w-4 h-4 text-ink-4 absolute left-3 top-1/2 -translate-y-1/2" />
+                <Input
+                  type="text"
+                  placeholder="Tìm kiếm theo cảm xúc..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="pl-9 h-9 rounded-lg border-border bg-surface text-ink text-xs focus-visible:ring-primary w-full"
+                />
+              </div>
+            </div>
+
+            {filteredLogs.length === 0 ? (
+              <p className="text-sm text-ink-4 text-center py-12">
+                Không tìm thấy nhật ký hành trình nào tương thích.
+              </p>
+            ) : (
+              <div className="flex flex-col gap-6 relative pl-6 border-l-2 border-border/60 ml-3">
+                {filteredLogs.map((log) => (
+                  <div key={log.id} className="relative flex flex-col gap-2">
+                    {/* timeline bullet */}
+                    <div className="absolute left-[-31px] top-0 w-4 h-4 rounded-full bg-primary border-4 border-background flex items-center justify-center ring-2 ring-primary/20 shadow-sm" />
+                    
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <span className="text-xs font-bold text-ink">
+                        Ngày {log.day} • {formatDate(log.date)}
+                      </span>
+                      <span className="text-xxs font-bold text-primary px-2 py-0.5 rounded bg-primary-bg border border-primary-border uppercase">
+                        {log.mood}
+                      </span>
+                    </div>
+
+                    <div className="bg-surface-2 dark:bg-stone-850 p-4 rounded-xl border border-border">
+                      <p className="text-xs md:text-sm text-ink-2 dark:text-ink leading-relaxed italic font-serif">
+                        &ldquo;{log.note}&rdquo;
+                      </p>
+                      
+                      {log.media && log.media.length > 0 && (
+                        <div className="flex flex-wrap gap-2 mt-3">
+                          {log.media.map((m, idx) => (
+                            <div key={idx} className="w-20 h-20 relative rounded-lg overflow-hidden border border-border">
+                              {m.type === "image" ? (
+                                <Image src={m.url} alt="logged media" fill className="object-cover" unoptimized />
+                              ) : (
+                                <video src={m.url} className="w-full h-full object-cover" />
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
