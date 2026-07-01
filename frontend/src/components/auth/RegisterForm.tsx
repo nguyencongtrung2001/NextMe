@@ -26,8 +26,12 @@ export default function RegisterForm() {
       setEmail("");
       setPassword("");
       setName("");
-    } catch (error: any) {
-      setErrorMsg(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMsg(error.message);
+      } else {
+        setErrorMsg("Đã có lỗi không xác định xảy ra");
+      }
     } finally {
       setIsLoading(false);
     }

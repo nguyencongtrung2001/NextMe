@@ -21,8 +21,12 @@ export default function LoginForm() {
     try {
       await goiDangNhap({ email, password });
       router.push("/"); // Thành công thì về trang chủ
-    } catch (error: any) {
-      setErrorMsg(error.message);
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        setErrorMsg(error.message);
+      } else {
+        setErrorMsg("Đã có lỗi không xác định xảy ra");
+      }
     } finally {
       setIsLoading(false);
     }
@@ -33,7 +37,7 @@ export default function LoginForm() {
       
       {errorMsg && (
         <div className="flex items-center gap-2 p-3 text-sm text-rose-600 bg-rose-50 dark:bg-rose-900/30 dark:text-rose-400 border border-rose-200 dark:border-rose-800 rounded-xl animate-fade-in">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <AlertCircle className="w-4 h-4 shrink-0" />
           <span>{errorMsg}</span>
         </div>
       )}
