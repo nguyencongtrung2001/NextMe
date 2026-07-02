@@ -83,11 +83,17 @@ const taoNhatKyCheckIn = async (userId, challengeId, { mood, note, files, slug }
     throw new Error('Thử thách này đã được hoàn thành!');
   }
 
-  // 1. Tính toán ngày hiện tại của thử thách dựa trên mốc Midnight
-  const start = new Date(challenge.startDate);
-  const now = new Date();
-  const startZero = new Date(start.getFullYear(), start.getMonth(), start.getDate());
-  const nowZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  // 1. Tính toán ngày hiện tại của thử thách dựa trên mốc Midnight ở múi giờ Vietnam (UTC+7)
+  const getVietnamMidnight = (dateObj) => {
+    const vnTime = new Date(dateObj.getTime() + (7 * 60 * 60 * 1000));
+    const year = vnTime.getUTCFullYear();
+    const month = vnTime.getUTCMonth();
+    const day = vnTime.getUTCDate();
+    return new Date(Date.UTC(year, month, day));
+  };
+
+  const startZero = getVietnamMidnight(new Date(challenge.startDate));
+  const nowZero = getVietnamMidnight(new Date());
   
   const diffTime = nowZero.getTime() - startZero.getTime();
   const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
@@ -98,11 +104,15 @@ const taoNhatKyCheckIn = async (userId, challengeId, { mood, note, files, slug }
   }
 
   // 2. Kiểm tra xem hôm nay người dùng đã check-in chưa
+  const nowVn = new Date(Date.now() + 7 * 60 * 60 * 1000);
+  const loggedDateStr = `${nowVn.getUTCFullYear()}-${(nowVn.getUTCMonth() + 1).toString().padStart(2, '0')}-${nowVn.getUTCDate().toString().padStart(2, '0')}`;
+
   const alreadyLoggedToday = challenge.historyLogs.some((log) => {
     const logDate = new Date(log.loggedDate);
-    return logDate.getFullYear() === now.getFullYear() &&
-           logDate.getMonth() === now.getMonth() &&
-           logDate.getDate() === now.getDate();
+    const logYear = logDate.getUTCFullYear();
+    const logMonth = (logDate.getUTCMonth() + 1).toString().padStart(2, '0');
+    const logDay = logDate.getUTCDate().toString().padStart(2, '0');
+    return `${logYear}-${logMonth}-${logDay}` === loggedDateStr;
   });
 
   if (alreadyLoggedToday) {
@@ -128,8 +138,6 @@ const taoNhatKyCheckIn = async (userId, challengeId, { mood, note, files, slug }
   }
 
   // 4. Tạo bản ghi HistoryLog mới
-  const loggedDateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
-  
   await thuThachRepository.taoHistoryLog({
     challengeId,
     day: currentDay,
@@ -148,8 +156,7 @@ const taoNhatKyCheckIn = async (userId, challengeId, { mood, note, files, slug }
     const sortedLogs = [...challenge.historyLogs].sort(
       (a, b) => new Date(b.loggedDate).getTime() - new Date(a.loggedDate).getTime()
     );
-    const lastLogDate = new Date(sortedLogs[0].loggedDate);
-    const lastLogZero = new Date(lastLogDate.getFullYear(), lastLogDate.getMonth(), lastLogDate.getDate());
+    const lastLogZero = getVietnamMidnight(new Date(sortedLogs[0].loggedDate));
     
     // Khoảng cách ngày giữa hôm nay và ngày check-in cuối cùng
     const dayDiff = Math.floor((nowZero.getTime() - lastLogZero.getTime()) / (1000 * 60 * 60 * 24));
