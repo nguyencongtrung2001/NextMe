@@ -1,9 +1,29 @@
 "use client";
 
+import { useState, useEffect } from "react";
 import { LogOut, User } from "lucide-react";
 import Link from "next/link";
+import { layThongTinProfile } from "@/api/xac_thuc";
 
 export default function UserMenu() {
+  const [userName, setUserName] = useState("NextMe User");
+
+  useEffect(() => {
+    let active = true;
+    layThongTinProfile()
+      .then((res) => {
+        if (active && res.success && res.data && res.data.name) {
+          setUserName(res.data.name);
+        }
+      })
+      .catch((err) => {
+        console.error("Lỗi lấy thông tin user:", err);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
   return (
     <div className="fixed bottom-6 left-6 z-50 animate-fade-in">
       <div className="flex items-center gap-2 bg-surface/85 dark:bg-surface-2/80 backdrop-blur-xl border border-border p-1.5 rounded-full shadow-[0_8px_30px_rgb(0,0,0,0.08)]">
@@ -14,7 +34,7 @@ export default function UserMenu() {
 
         {/* Name (Ẩn trên mobile để tiết kiệm diện tích) */}
         <div className="flex-col hidden md:flex min-w-[90px] ml-1">
-          <span className="text-sm font-bold text-ink leading-tight">NextMe User</span>
+          <span className="text-sm font-bold text-ink leading-tight">{userName}</span>
         </div>
 
         {/* Divider */}

@@ -42,10 +42,11 @@ const dangNhap = async (req, res) => {
     const ketQua = await xacThucService.xuLyDangNhap({ email, password });
 
     // Controller đảm nhận việc nhét Token vào HTTP-Only Cookie
+    const isProd = process.env.NODE_ENV === 'production';
     res.cookie('token', ketQua.token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: isProd,
+      sameSite: isProd ? 'none' : 'lax',
       maxAge: 7 * 24 * 60 * 60 * 1000, 
     });
 
@@ -62,7 +63,22 @@ const dangNhap = async (req, res) => {
   }
 };
 
+const layThongTinCaNhan = async (req, res) => {
+  try {
+    const userId = req.nguoiDung.id;
+    const user = await xacThucService.layThongTinNguoiDung(userId);
+    return res.status(200).json({
+      success: true,
+      data: user,
+    });
+  } catch (error) {
+    console.error('Lỗi khi lấy thông tin cá nhân:', error);
+    return res.status(500).json({ thongBao: 'Lỗi hệ thống khi lấy thông tin cá nhân' });
+  }
+};
+
 module.exports = {
   dangKy,
   dangNhap,
+  layThongTinCaNhan,
 };

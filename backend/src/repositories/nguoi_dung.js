@@ -20,7 +20,14 @@ const taoNguoiDung = async ({ email, hashedPassword, name }) => {
   });
 };
 
+const timTheoId = async (id) => {
+  return await prisma.user.findUnique({
+    where: { id: parseInt(id) },
+  });
+};
+
 module.exports = {
   timTheoEmail,
   taoNguoiDung,
+  timTheoId,
 };

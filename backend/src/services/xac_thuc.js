@@ -66,7 +66,21 @@ const xuLyDangNhap = async ({ email, password }) => {
   };
 };
 
+const layThongTinNguoiDung = async (userId) => {
+  const user = await nguoiDungRepo.timTheoId(userId);
+  if (!user) {
+    throw new Error('Người dùng không tồn tại');
+  }
+  return {
+    id: user.id,
+    email: user.email,
+    name: user.name,
+    avatarUrl: user.avatarUrl,
+  };
+};
+
 module.exports = {
   xuLyDangKy,
   xuLyDangNhap,
+  layThongTinNguoiDung,
 };

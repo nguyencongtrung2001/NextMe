@@ -36,3 +36,18 @@ export async function goiDangKy(duLieu: DuLieuDangKy): Promise<PhanHoiApi> {
   
   return response.json();
 }
+
+export async function layThongTinProfile(): Promise<{ success: boolean; data: { id: number; email: string; name: string; avatarUrl?: string } }> {
+  const response = await fetch(`${API_URL}/me`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.thongBao || "Đã có lỗi xảy ra khi lấy thông tin cá nhân");
+  }
+  
+  return response.json();
+}
