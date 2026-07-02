@@ -50,8 +50,15 @@ const ensureFlowersExist = async () => {
       { nameFlower: 'Hướng Dương', type: 'sunflower', emoji: '🌻', color: 'var(--amber)' },
       { nameFlower: 'Oải Hương', type: 'lavender', emoji: '🪻', color: 'var(--sage)' },
       { nameFlower: 'Tulip', type: 'tulip', emoji: '🌷', color: 'var(--rose)' },
+      { nameFlower: 'Hoa Cúc', type: 'daisy', emoji: '🌼', color: 'var(--yellow)' },
+      { nameFlower: 'Hoa Hồng', type: 'rose', emoji: '🌹', color: 'var(--red)' },
+      { nameFlower: 'Mầm Cây', type: 'sprout', emoji: '🌿', color: 'var(--emerald)' },
+      { nameFlower: 'Cây Cọ', type: 'palm', emoji: '🌴', color: 'var(--teal)' },
+      { nameFlower: 'Hoa Đào', type: 'cherry_blossom', emoji: '🌸', color: 'var(--pink)' },
+      { nameFlower: 'Cây Thông', type: 'pine', emoji: '🌲', color: 'var(--green)' },
+      { nameFlower: 'Xương Rồng', type: 'cactus', emoji: '🌵', color: 'var(--lime)' }
     ];
-    
+
     await prisma.flower.createMany({
       data: macDinh,
       skipDuplicates: true,
