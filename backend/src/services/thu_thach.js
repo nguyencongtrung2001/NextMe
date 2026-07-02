@@ -1,4 +1,20 @@
 const thuThachRepository = require('../repositories/thu_thach');
+const { uploadToCloudinary } = require('../config/cloudinary');
+
+// Hàm helper để chuẩn hóa chuỗi tiếng Việt thành slug URL
+const slugifyText = (text) => {
+  if (!text) return '';
+  return text
+    .toString()
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '') // Xóa dấu
+    .replace(/[đĐ]/g, 'd')
+    .replace(/([^a-z0-9\s-]|_)+/g, '') // Xóa ký tự đặc biệt
+    .trim()
+    .replace(/\s+/g, '-') // Thay khoảng trắng bằng -
+    .replace(/-+/g, '-'); // Tránh nhiều ký tự - liền nhau
+};
 
 const layDanhSachThuThach = async (userId) => {
   await thuThachRepository.ensureFlowersExist();
@@ -10,7 +26,6 @@ const taoThuThachMoi = async (userId, { title, totalDays, flowerType }) => {
     throw new Error('Dữ liệu đầu vào không hợp lệ!');
   }
 
-  // Đảm bảo hoa tồn tại trước khi tìm kiếm
   await thuThachRepository.ensureFlowersExist();
 
   const hoa = await thuThachRepository.timHoaTheoType(flowerType);
@@ -20,8 +35,6 @@ const taoThuThachMoi = async (userId, { title, totalDays, flowerType }) => {
 
   // Tính ngày bắt đầu từ ngày mai (date.now + 1 ngày)
   const startDate = new Date(Date.now() + 24 * 60 * 60 * 1000);
-  
-  // Tính ngày kết thúc ước tính dựa vào ngày bắt đầu + tổng số ngày
   const estimatedEndDate = new Date(startDate.getTime() + parseInt(totalDays) * 24 * 60 * 60 * 1000);
 
   return await thuThachRepository.taoThuThach({
@@ -34,7 +47,129 @@ const taoThuThachMoi = async (userId, { title, totalDays, flowerType }) => {
   });
 };
 
+const timThuThachTheoSlug = async (userId, slug) => {
+  await thuThachRepository.ensureFlowersExist();
+  const list = await thuThachRepository.timKiemThuThachCuaUser(userId);
+  
+  // So khớp in-memory bằng slugified title
+  const found = list.find((c) => slugifyText(c.title) === slug);
+  if (!found) {
+    throw new Error('Không tìm thấy thử thách tương ứng với đường dẫn.');
+  }
+
+  // Lấy chi tiết đầy đủ của thử thách (bao gồm logs và media files)
+  return await thuThachRepository.timChiTietThuThachTheoId(found.id);
+};
+
+const taoNhatKyCheckIn = async (userId, challengeId, { mood, note, files, slug }) => {
+  const challenge = await thuThachRepository.timChiTietThuThachTheoId(challengeId);
+  if (!challenge) {
+    throw new Error('Thử thách không tồn tại.');
+  }
+
+  if (challenge.userId !== parseInt(userId)) {
+    throw new Error('Bạn không có quyền thực hiện hành động này.');
+  }
+
+  if (challenge.status === 'COMPLETED') {
+    throw new Error('Thử thách này đã được hoàn thành!');
+  }
+
+  // 1. Tính toán ngày hiện tại của thử thách dựa trên mốc Midnight
+  const start = new Date(challenge.startDate);
+  const now = new Date();
+  const startZero = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const nowZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const diffTime = nowZero.getTime() - startZero.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  const currentDay = diffDays < 0 ? 0 : Math.min(diffDays + 1, challenge.totalDays);
+
+  if (currentDay === 0) {
+    throw new Error('Thử thách chưa chính thức bắt đầu! Hãy quay lại check-in vào ngày mai.');
+  }
+
+  // 2. Kiểm tra xem hôm nay người dùng đã check-in chưa
+  const alreadyLoggedToday = challenge.historyLogs.some((log) => {
+    const logDate = new Date(log.loggedDate);
+    return logDate.getFullYear() === now.getFullYear() &&
+           logDate.getMonth() === now.getMonth() &&
+           logDate.getDate() === now.getDate();
+  });
+
+  if (alreadyLoggedToday) {
+    throw new Error('Bạn đã check-in cho ngày hôm nay rồi!');
+  }
+
+  // 3. Upload các hình ảnh / video lên Cloudinary (nếu có)
+  const mediaFilesList = [];
+  if (files && files.length > 0) {
+    const folderPath = `challenges/${slug || slugifyText(challenge.title)}`;
+    for (const file of files) {
+      const isVideo = file.mimetype.startsWith('video/');
+      const resourceType = isVideo ? 'video' : 'image';
+      
+      const uploadResult = await uploadToCloudinary(file.buffer, folderPath, resourceType);
+      
+      mediaFilesList.push({
+        type: isVideo ? 'VIDEO' : 'IMAGE',
+        url: uploadResult.secure_url,
+        name: file.originalname || 'file_attachment',
+      });
+    }
+  }
+
+  // 4. Tạo bản ghi HistoryLog mới
+  const loggedDateStr = `${now.getFullYear()}-${(now.getMonth() + 1).toString().padStart(2, '0')}-${now.getDate().toString().padStart(2, '0')}`;
+  
+  await thuThachRepository.taoHistoryLog({
+    challengeId,
+    day: currentDay,
+    loggedDate: loggedDateStr,
+    mood: mood || 'Bình thường',
+    note: note || 'Không có ghi chú.',
+    mediaFiles: mediaFilesList,
+  });
+
+  // 5. Tính toán tiến độ, streak và trạng thái mới
+  const nextCompletedCount = challenge.completedDaysCount + 1;
+  let newStreak = 1;
+
+  if (challenge.historyLogs.length > 0) {
+    // Sắp xếp logs gần nhất lên trước
+    const sortedLogs = [...challenge.historyLogs].sort(
+      (a, b) => new Date(b.loggedDate).getTime() - new Date(a.loggedDate).getTime()
+    );
+    const lastLogDate = new Date(sortedLogs[0].loggedDate);
+    const lastLogZero = new Date(lastLogDate.getFullYear(), lastLogDate.getMonth(), lastLogDate.getDate());
+    
+    // Khoảng cách ngày giữa hôm nay và ngày check-in cuối cùng
+    const dayDiff = Math.floor((nowZero.getTime() - lastLogZero.getTime()) / (1000 * 60 * 60 * 24));
+    
+    if (dayDiff === 1) {
+      newStreak = challenge.streak + 1;
+    } else if (dayDiff === 0) {
+      newStreak = challenge.streak; // Phòng trừ trường hợp log cùng ngày
+    } else {
+      newStreak = 1; // Bị đứt chuỗi streak
+    }
+  }
+
+  const nextProgress = Math.min(Math.round((nextCompletedCount / challenge.totalDays) * 100), 100);
+  const nextStatus = nextCompletedCount >= challenge.totalDays ? 'COMPLETED' : challenge.status;
+
+  // 6. Cập nhật vào DB và trả về thông tin chi tiết đầy đủ đã cập nhật
+  return await thuThachRepository.capNhatTienDoThuThach(challengeId, {
+    completedDaysCount: nextCompletedCount,
+    streak: newStreak,
+    progress: nextProgress,
+    status: nextStatus,
+  });
+};
+
 module.exports = {
   layDanhSachThuThach,
   taoThuThachMoi,
+  timThuThachTheoSlug,
+  taoNhatKyCheckIn,
 };

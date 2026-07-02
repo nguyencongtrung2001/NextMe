@@ -10,6 +10,28 @@ export interface Flower {
   createdAt: string;
 }
 
+export interface MediaFile {
+  id: string;
+  logId: string;
+  type: "IMAGE" | "VIDEO";
+  url: string;
+  name?: string;
+  createdAt: string;
+}
+
+export interface Log {
+  id: string;
+  challengeId: string;
+  day: number;
+  loggedDate: string;
+  status: "COMPLETED" | "MISSED" | "PENDING";
+  mood?: string;
+  note?: string;
+  mediaFiles?: MediaFile[];
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Challenge {
   id: string;
   title: string;
@@ -24,6 +46,7 @@ export interface Challenge {
   createdAt: string;
   updatedAt: string;
   flower?: Flower;
+  historyLogs?: Log[];
 }
 
 export interface TaoThuThachInput {
@@ -43,11 +66,17 @@ export interface PhanHoiTaoMoi {
   data: Challenge;
 }
 
+export interface PhanHoiChiTiet {
+  success: boolean;
+  message?: string;
+  data: Challenge;
+}
+
 export async function layDanhSachThuThach(): Promise<PhanHoiDanhSach> {
   const response = await fetch(API_URL, {
     method: "GET",
     headers: { "Content-Type": "application/json" },
-    credentials: "include", // Quan trọng để gửi kèm Token Cookie
+    credentials: "include",
   });
   
   if (!response.ok) {
@@ -63,12 +92,42 @@ export async function taoThuThach(duLieu: TaoThuThachInput): Promise<PhanHoiTaoM
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(duLieu),
-    credentials: "include", // Quan trọng để gửi kèm Token Cookie
+    credentials: "include",
   });
   
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Đã có lỗi xảy ra khi tạo thử thách");
+  }
+  
+  return response.json();
+}
+
+export async function layChiTietThuThach(slug: string): Promise<PhanHoiChiTiet> {
+  const response = await fetch(`${API_URL}/chi-tiet/${slug}`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Không thể tải chi tiết thử thách");
+  }
+  
+  return response.json();
+}
+
+export async function guiCheckIn(challengeId: string, duLieu: FormData): Promise<PhanHoiChiTiet> {
+  const response = await fetch(`${API_URL}/${challengeId}/log`, {
+    method: "POST",
+    body: duLieu, // Khi gửi FormData không được set Content-Type header bằng tay để trình duyệt tự điền boundary
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Không thể thực hiện ghi nhận check-in");
   }
   
   return response.json();

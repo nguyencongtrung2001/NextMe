@@ -51,9 +51,70 @@ const ensureFlowersExist = async () => {
   }
 };
 
+const timChiTietThuThachTheoId = async (challengeId) => {
+  return await prisma.challenge.findUnique({
+    where: { id: challengeId },
+    include: {
+      flower: true,
+      historyLogs: {
+        include: {
+          mediaFiles: true,
+        },
+        orderBy: {
+          day: 'asc',
+        },
+      },
+    },
+  });
+};
+
+const taoHistoryLog = async ({ challengeId, day, loggedDate, mood, note, mediaFiles }) => {
+  return await prisma.historyLog.create({
+    data: {
+      challengeId,
+      day: parseInt(day),
+      loggedDate: new Date(loggedDate),
+      mood,
+      note,
+      mediaFiles: {
+        create: mediaFiles || [],
+      },
+    },
+    include: {
+      mediaFiles: true,
+    },
+  });
+};
+
+const capNhatTienDoThuThach = async (challengeId, { completedDaysCount, streak, progress, status }) => {
+  return await prisma.challenge.update({
+    where: { id: challengeId },
+    data: {
+      completedDaysCount: parseInt(completedDaysCount),
+      streak: parseInt(streak),
+      progress: parseInt(progress),
+      status: status,
+    },
+    include: {
+      flower: true,
+      historyLogs: {
+        include: {
+          mediaFiles: true,
+        },
+        orderBy: {
+          day: 'asc',
+        },
+      },
+    },
+  });
+};
+
 module.exports = {
   timKiemThuThachCuaUser,
   timHoaTheoType,
   taoThuThach,
   ensureFlowersExist,
+  timChiTietThuThachTheoId,
+  taoHistoryLog,
+  capNhatTienDoThuThach,
 };

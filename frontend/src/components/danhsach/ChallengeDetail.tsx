@@ -4,7 +4,6 @@ import { useState, useEffect } from "react";
 import Image from "next/image";
 import { notFound } from "next/navigation";
 import {
-
   Flame,
   Search,
   Image as ImageIcon,
@@ -17,6 +16,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { layChiTietThuThach, guiCheckIn, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
 
 export interface Flower {
   name: string;
@@ -50,8 +50,15 @@ export interface Log {
 function calcCurrentDay(startDateStr: string, totalDays: number) {
   const start = new Date(startDateStr);
   const now = new Date();
-  const diffTime = Math.abs(now.getTime() - start.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Thiết lập mốc Midnight để tính toán khoảng cách ngày thuần túy, tránh lệch múi giờ
+  const startZero = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const nowZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const diffTime = nowZero.getTime() - startZero.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return 0; // Chưa bắt đầu
   return Math.min(diffDays + 1, totalDays);
 }
 
@@ -95,6 +102,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [challengeLogs, setChallengeLogs] = useState<Log[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState<"overview" | "history">("overview");
 
   // Heatmap detail panel selection
@@ -105,6 +113,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
   const [selectedMood, setSelectedMood] = useState("Cực sung");
   const [noteText, setNoteText] = useState("");
   const [mediaFiles, setMediaFiles] = useState<{ type: "image" | "video"; url: string }[]>([]);
+  const [rawFiles, setRawFiles] = useState<File[]>([]);
 
   // Search in timeline
   const [searchQuery, setSearchQuery] = useState("");
@@ -113,34 +122,76 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
   const [petals, setPetals] = useState<{ id: number; left: number; color: string; duration: number; delay: number }[]>([]);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      const allChallenges: Challenge[] = JSON.parse(localStorage.getItem("challenges_data") || "[]");
-      const current = allChallenges.find((c) => c.id === slug);
+    let active = true;
 
-      if (!current) {
-        notFound();
-        return;
-      }
+    layChiTietThuThach(slug)
+      .then((res) => {
+        if (!active) return;
+        if (res.success && res.data) {
+          const data: BackendChallenge = res.data;
+          
+          // Ánh xạ CSDL backend sang structure frontend
+          const mapped: Challenge = {
+            id: data.id,
+            title: data.title,
+            status: data.status.toLowerCase() as "active" | "completed",
+            totalDays: data.totalDays,
+            completedDaysCount: data.completedDaysCount,
+            streak: data.streak,
+            progress: data.progress,
+            startDate: data.startDate,
+            estimatedEndDate: data.estimatedEndDate,
+            flower: {
+              name: data.flower?.nameFlower || "Hướng Dương",
+              type: data.flower?.type || "sunflower",
+              color: data.flower?.color || "var(--amber)",
+              emoji: data.flower?.emoji || "🌻",
+            }
+          };
 
-      const allLogs = JSON.parse(localStorage.getItem("challenges_logs") || "{}");
-      const currentLogs: Log[] = allLogs[slug] || [];
+          const mappedLogs: Log[] = data.historyLogs?.map((l: BackendLog) => ({
+            id: l.id,
+            day: l.day,
+            date: l.loggedDate,
+            mood: l.mood || "Bình thường",
+            note: l.note || "",
+            media: l.mediaFiles?.map((m: BackendMediaFile) => ({
+              type: m.type.toLowerCase() as "image" | "video",
+              url: m.url
+            })) || []
+          })) || [];
 
-      setChallenge(current);
-      setChallengeLogs(currentLogs);
+          setChallenge(mapped);
+          setChallengeLogs(mappedLogs);
 
-      // Default selected day is today
-      const todayNum = calcCurrentDay(current.startDate, current.totalDays);
-      setSelectedDay(todayNum);
-      const todayLog = currentLogs.find((l) => l.day === todayNum) || null;
-      setSelectedDayLog(todayLog);
+          // Ngày hiện tại
+          const todayNum = calcCurrentDay(mapped.startDate, mapped.totalDays);
+          setSelectedDay(todayNum);
+          const todayLog = mappedLogs.find((l) => l.day === todayNum) || null;
+          setSelectedDayLog(todayLog);
+        } else {
+          setErrorMsg("Không tìm thấy thử thách.");
+        }
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.error(err);
+        const error = err as Error;
+        if (error.message.includes("không tồn tại")) {
+          notFound();
+        } else {
+          setErrorMsg(error.message || "Đã xảy ra lỗi khi tải chi tiết thử thách");
+        }
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsLoaded(true);
+      });
 
-      setIsLoaded(true);
-    }, 0);
-
-    return () => clearTimeout(timer);
+    return () => {
+      active = false;
+    };
   }, [slug]);
-
-
 
   const triggerConfetti = () => {
     const colors = ["#2563EB", "#3B82F6", "#7C9F80", "#E58C7C", "#BFDBFE"];
@@ -160,6 +211,8 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
   const handleMediaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files) return;
     const files = Array.from(e.target.files);
+    setRawFiles((prev) => [...prev, ...files]);
+
     const newMedia = files.map((file) => {
       const url = URL.createObjectURL(file);
       const type = file.type.startsWith("video/") ? ("video" as const) : ("image" as const);
@@ -168,58 +221,100 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
     setMediaFiles((prev) => [...prev, ...newMedia]);
   };
 
+  const removeMediaFile = (idx: number) => {
+    setMediaFiles((prev) => prev.filter((_, i) => i !== idx));
+    setRawFiles((prev) => prev.filter((_, i) => i !== idx));
+  };
+
   const handleCompleteToday = () => {
     if (!challenge) return;
-    const currentDay = calcCurrentDay(challenge.startDate, challenge.totalDays);
 
-    const newLog: Log = {
-      id: `log-${Date.now()}`,
-      day: currentDay,
-      date: new Date().toISOString(),
-      mood: selectedMood,
-      note: noteText.trim() || "Không có ghi chú.",
-      media: mediaFiles,
-    };
-
-    const updatedLogs = [...challengeLogs, newLog];
-    setChallengeLogs(updatedLogs);
-
-    // Save to LocalStorage
-    const allChallenges: Challenge[] = JSON.parse(localStorage.getItem("challenges_data") || "[]");
-    const updatedChallenges = allChallenges.map((c) => {
-      if (c.id === challenge.id) {
-        const completions = c.completedDaysCount + 1;
-        const newStreak = c.streak + 1;
-        const progress = Math.min(Math.round((completions / c.totalDays) * 100), 100);
-        return {
-          ...c,
-          completedDaysCount: completions,
-          streak: newStreak,
-          progress,
-          status: completions >= c.totalDays ? ("completed" as const) : c.status,
-        };
-      }
-      return c;
+    // Chuẩn bị FormData để upload media files lên Cloudinary
+    const formData = new FormData();
+    formData.append("mood", selectedMood);
+    formData.append("note", noteText.trim() || "Không có ghi chú.");
+    formData.append("slug", slug);
+    rawFiles.forEach((file) => {
+      formData.append("mediaFiles", file);
     });
 
-    localStorage.setItem("challenges_data", JSON.stringify(updatedChallenges));
+    setIsLoaded(false);
 
-    const allLogs = JSON.parse(localStorage.getItem("challenges_logs") || "{}");
-    allLogs[challenge.id] = updatedLogs;
-    localStorage.setItem("challenges_logs", JSON.stringify(allLogs));
+    guiCheckIn(challenge.id, formData)
+      .then((res) => {
+        if (res.success && res.data) {
+          const updated: BackendChallenge = res.data;
+          
+          // Map dữ liệu trả về sau khi check-in
+          const mapped: Challenge = {
+            id: updated.id,
+            title: updated.title,
+            status: updated.status.toLowerCase() as "active" | "completed",
+            totalDays: updated.totalDays,
+            completedDaysCount: updated.completedDaysCount,
+            streak: updated.streak,
+            progress: updated.progress,
+            startDate: updated.startDate,
+            estimatedEndDate: updated.estimatedEndDate,
+            flower: {
+              name: updated.flower?.nameFlower || "Hướng Dương",
+              type: updated.flower?.type || "sunflower",
+              color: updated.flower?.color || "var(--amber)",
+              emoji: updated.flower?.emoji || "🌻",
+            }
+          };
 
-    // Update states
-    const currentUpdated = updatedChallenges.find((c) => c.id === challenge.id);
-    if (currentUpdated) {
-      setChallenge(currentUpdated);
-    }
-    setSelectedDayLog(newLog);
-    setNoteText("");
-    setMediaFiles([]);
+          const mappedLogs: Log[] = updated.historyLogs?.map((l: BackendLog) => ({
+            id: l.id,
+            day: l.day,
+            date: l.loggedDate,
+            mood: l.mood || "Bình thường",
+            note: l.note || "",
+            media: l.mediaFiles?.map((m: BackendMediaFile) => ({
+              type: m.type.toLowerCase() as "image" | "video",
+              url: m.url
+            })) || []
+          })) || [];
 
-    // Confetti effect
-    triggerConfetti();
+          setChallenge(mapped);
+          setChallengeLogs(mappedLogs);
+
+          // Cập nhật ngày xem hiện tại thành hôm nay
+          const currentDay = calcCurrentDay(mapped.startDate, mapped.totalDays);
+          setSelectedDay(currentDay);
+          const todayLog = mappedLogs.find((l) => l.day === currentDay) || null;
+          setSelectedDayLog(todayLog);
+
+          // Reset inputs
+          setNoteText("");
+          setMediaFiles([]);
+          setRawFiles([]);
+
+          // Kích hoạt hiệu ứng pháo hoa hoa giấy
+          triggerConfetti();
+        } else {
+          alert(res.message || "Lỗi khi ghi nhận check-in");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        const error = err as Error;
+        alert(error.message || "Lỗi khi ghi nhận check-in");
+      })
+      .finally(() => {
+        setIsLoaded(true);
+      });
   };
+
+  if (errorMsg) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 gap-4 w-full">
+        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-2xl text-sm font-semibold max-w-md text-center">
+          {errorMsg}
+        </div>
+      </div>
+    );
+  }
 
   if (!isLoaded || !challenge) {
     return (
@@ -234,7 +329,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
   const hasLogToday = challengeLogs.some((l) => l.day === currentDay);
   const isChallengeCompleted = challenge.status === "completed";
 
-  // Filtered logs for history search
+  // Lọc nhật ký trong tab Lịch sử
   const filteredLogs = challengeLogs
     .filter((log) => log.mood.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => b.day - a.day);
@@ -262,7 +357,6 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
           }}
         />
       ))}
-
 
       {/* Detail Banner Card */}
       <div className="bg-card border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
@@ -364,7 +458,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
 
                   let cellClass = "bg-surface text-ink-4 border-border"; // locked
 
-                  if (dayNum > currentDay) {
+                  if (dayNum > currentDay || currentDay === 0) {
                     cellClass = "bg-surface-2 dark:bg-stone-850/50 text-ink-5 border-dashed cursor-not-allowed";
                   } else if (dayNum === currentDay) {
                     cellClass = log
@@ -379,7 +473,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
                   return (
                     <button
                       key={dayNum}
-                      disabled={dayNum > currentDay}
+                      disabled={dayNum > currentDay || currentDay === 0}
                       onClick={() => {
                         setSelectedDay(dayNum);
                         setSelectedDayLog(log || null);
@@ -422,7 +516,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
               <div
                 className={cn(
                   "border rounded-xl p-4 md:p-5 flex flex-col gap-2.5 animate-fade-up bg-card",
-                  selectedDay > currentDay
+                  (selectedDay > currentDay || currentDay === 0)
                     ? "border-border"
                     : selectedDayLog
                     ? "border-sage-border bg-sage-bg/30"
@@ -440,7 +534,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
                   )}
                 </div>
                 
-                {selectedDay > currentDay ? (
+                {(selectedDay > currentDay || currentDay === 0) ? (
                   <p className="text-xs text-ink-4">Ngày này chưa được mở khóa.</p>
                 ) : selectedDayLog ? (
                   <div className="flex flex-col gap-2">
@@ -468,7 +562,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
             )}
 
             {/* Inline Quick Logger */}
-            {!isChallengeCompleted && !hasLogToday && (
+            {!isChallengeCompleted && !hasLogToday && currentDay > 0 && (
               <div className="bg-card border border-border rounded-2xl p-6 flex flex-col gap-5 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
                 <h3 className="font-serif text-base md:text-lg font-bold text-ink flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" />
@@ -520,7 +614,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
                     />
                   </div>
 
-                  {/* Media uploads simulation */}
+                  {/* Media uploads */}
                   <div className="flex flex-col gap-2">
                     <Label className="text-xs font-bold text-ink-2 dark:text-ink uppercase tracking-wider">
                       Thêm hình ảnh hoặc video:
@@ -554,7 +648,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
                             )}
                             <button
                               type="button"
-                              onClick={() => setMediaFiles(prev => prev.filter((_, i) => i !== idx))}
+                              onClick={() => removeMediaFile(idx)}
                               className="absolute top-1 right-1 bg-black/60 text-white rounded-full p-0.5 opacity-0 group-hover:opacity-100 transition-opacity duration-200 cursor-pointer"
                             >
                               <X className="w-3 h-3" />
