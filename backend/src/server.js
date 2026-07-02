@@ -7,6 +7,7 @@ const cookieParser = require('cookie-parser');
 
 // Gọi các tuyến đường (Routes)
 const tuyenDuongXacThuc = require('./routes/xac_thuc');
+const tuyenDuongThuThach = require('./routes/thu_thach');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,6 +29,7 @@ app.use(cors({
 
 // Định tuyến API
 app.use('/api/xac-thuc', tuyenDuongXacThuc);
+app.use('/api/thu-thach', tuyenDuongThuThach);
 
 // API kiểm tra trạng thái
 app.get('/', (req, res) => {

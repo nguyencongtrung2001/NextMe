@@ -4,147 +4,101 @@ import { useState, useEffect } from "react";
 import { Sprout, Loader2 } from "lucide-react";
 import ChallengeCard, { Challenge } from "./ChallengeCard";
 import CreateChallengeDialog from "./CreateChallengeDialog";
+import { layDanhSachThuThach, taoThuThach, Challenge as BackendChallenge } from "@/api/thu_thach";
 
 export default function ChallengeList() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
-    // 1. Seed Mock Data if empty
-    if (!localStorage.getItem("challenges_data")) {
-      const mockChallenges: Challenge[] = [
-        {
-          id: "c1",
-          title: "Dậy sớm lúc 5:30 AM mỗi ngày",
-          status: "active",
-          totalDays: 66,
-          completedDaysCount: 23,
-          streak: 23,
-          progress: 35,
-          startDate: new Date(Date.now() - 23 * 24 * 60 * 60 * 1000).toISOString(),
-          estimatedEndDate: new Date(Date.now() + 43 * 24 * 60 * 60 * 1000).toISOString(),
-          flower: {
-            name: "Hướng Dương",
-            type: "sunflower",
-            color: "var(--amber)",
-            emoji: "🌻",
-          },
-        },
-        {
-          id: "c2",
-          title: "Đọc 10 trang sách",
-          status: "completed",
-          totalDays: 30,
-          completedDaysCount: 30,
-          streak: 30,
-          progress: 100,
-          startDate: new Date(Date.now() - 40 * 24 * 60 * 60 * 1000).toISOString(),
-          estimatedEndDate: new Date(Date.now() - 10 * 24 * 60 * 60 * 1000).toISOString(),
-          flower: {
-            name: "Tulip",
-            type: "tulip",
-            color: "var(--rose)",
-            emoji: "🌷",
-          },
-        },
-        {
-          id: "c3",
-          title: "Luyện tập Yoga 15 phút",
-          status: "active",
-          totalDays: 30,
-          completedDaysCount: 9,
-          streak: 9,
-          progress: 30,
-          startDate: new Date(Date.now() - 9 * 24 * 60 * 60 * 1000).toISOString(),
-          estimatedEndDate: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000).toISOString(),
-          flower: {
-            name: "Tulip",
-            type: "tulip",
-            color: "var(--rose)",
-            emoji: "🌷",
-          },
-        },
-      ];
-      localStorage.setItem("challenges_data", JSON.stringify(mockChallenges));
-    }
+    let active = true;
 
-    if (!localStorage.getItem("challenges_logs")) {
-      const c1Logs = Array.from({ length: 23 }, (_, i) => ({
-        id: `log-c1-${i + 1}`,
-        day: i + 1,
-        date: new Date(Date.now() - (23 - i) * 24 * 60 * 60 * 1000).toISOString(),
-        mood: "🔥 Cực sung",
-        note: `Tôi đã dậy sớm và hoàn thành tốt ngày thứ ${i + 1} của mình!`,
-        media: [],
-      }));
+    layDanhSachThuThach()
+      .then((response) => {
+        if (!active) return;
+        if (response.success) {
+          // Ánh xạ dữ liệu từ backend sang định dạng frontend hiện tại
+          const mappedChallenges: Challenge[] = response.data.map((c: BackendChallenge) => ({
+            id: c.id,
+            title: c.title,
+            status: c.status.toLowerCase() as "active" | "completed",
+            totalDays: c.totalDays,
+            completedDaysCount: c.completedDaysCount,
+            streak: c.streak,
+            progress: c.progress,
+            startDate: c.startDate,
+            estimatedEndDate: c.estimatedEndDate,
+            flower: {
+              name: c.flower?.nameFlower || "Hướng Dương",
+              type: c.flower?.type || "sunflower",
+              color: c.flower?.color || "var(--amber)",
+              emoji: c.flower?.emoji || "🌻",
+            }
+          }));
+          setChallenges(mappedChallenges);
+        } else {
+          setErrorMsg("Không thể tải danh sách thử thách");
+        }
+      })
+      .catch((err) => {
+        if (!active) return;
+        console.error(err);
+        const error = err as Error;
+        setErrorMsg(error.message || "Không thể tải danh sách thử thách");
+      })
+      .finally(() => {
+        if (!active) return;
+        setIsLoaded(true);
+      });
 
-      const c3Logs = Array.from({ length: 9 }, (_, i) => ({
-        id: `log-c3-${i + 1}`,
-        day: i + 1,
-        date: new Date(Date.now() - (9 - i) * 24 * 60 * 60 * 1000).toISOString(),
-        mood: "✨ Tuyệt vời",
-        note: `Hôm nay luyện tập Yoga ngày thứ ${i + 1} thật sảng khoái và thư thái.`,
-        media: [],
-      }));
-
-      const mockLogs = {
-        c1: c1Logs,
-        c3: c3Logs,
-      };
-      localStorage.setItem("challenges_logs", JSON.stringify(mockLogs));
-    }
-
-    // 2. Fetch state
-    const data = JSON.parse(localStorage.getItem("challenges_data") || "[]");
-    const timer = setTimeout(() => {
-      setChallenges(data);
-      setIsLoaded(true);
-    }, 0);
-    return () => clearTimeout(timer);
+    return () => {
+      active = false;
+    };
   }, []);
 
-  const handleCreateChallenge = (
+  const handleCreateChallenge = async (
     title: string,
     days: number,
     flower: "sunflower" | "lavender" | "tulip"
   ) => {
-    let flowerName = "Hướng Dương";
-    let flowerEmoji = "🌻";
-    let flowerColor = "var(--primary)";
+    try {
+      const response = await taoThuThach({
+        title,
+        totalDays: days,
+        flowerType: flower
+      });
 
-    if (flower === "lavender") {
-      flowerName = "Hoa Oải Hương";
-      flowerEmoji = "🪻";
-      flowerColor = "var(--sage)";
-    } else if (flower === "tulip") {
-      flowerName = "Hoa Tulip";
-      flowerEmoji = "🌷";
-      flowerColor = "var(--rose)";
+      if (response.success && response.data) {
+        const c: BackendChallenge = response.data;
+        const mappedNewChallenge: Challenge = {
+          id: c.id,
+          title: c.title,
+          status: c.status.toLowerCase() as "active" | "completed",
+          totalDays: c.totalDays,
+          completedDaysCount: c.completedDaysCount,
+          streak: c.streak,
+          progress: c.progress,
+          startDate: c.startDate,
+          estimatedEndDate: c.estimatedEndDate,
+          flower: {
+            name: c.flower?.nameFlower || "Hướng Dương",
+            type: c.flower?.type || "sunflower",
+            color: c.flower?.color || "var(--amber)",
+            emoji: c.flower?.emoji || "🌻",
+          }
+        };
+        setChallenges((prev) => [mappedNewChallenge, ...prev]);
+        setIsDialogOpen(false);
+      } else {
+        alert(response.message || "Lỗi khi tạo thử thách");
+      }
+    } catch (err) {
+      console.error(err);
+      const error = err as Error;
+      alert(error.message || "Có lỗi xảy ra khi tạo thử thách");
     }
-
-    const newChallenge: Challenge = {
-      id: `c-${Date.now()}`,
-      title: title,
-      status: "active",
-      totalDays: days,
-      completedDaysCount: 0,
-      streak: 0,
-      progress: 0,
-      startDate: new Date().toISOString(),
-      estimatedEndDate: new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString(),
-      flower: {
-        name: flowerName,
-        type: flower,
-        color: flowerColor,
-        emoji: flowerEmoji,
-      },
-    };
-
-    const updatedChallenges = [newChallenge, ...challenges];
-    setChallenges(updatedChallenges);
-    localStorage.setItem("challenges_data", JSON.stringify(updatedChallenges));
-    setIsDialogOpen(false);
   };
 
   return (
@@ -166,6 +120,12 @@ export default function ChallengeList() {
           onCreate={handleCreateChallenge}
         />
       </div>
+
+      {errorMsg && (
+        <div className="p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-sm font-medium">
+          {errorMsg}
+        </div>
+      )}
 
       {/* Challenges Grid list */}
       {!isLoaded ? (

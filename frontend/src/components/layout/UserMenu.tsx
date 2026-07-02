@@ -11,19 +11,18 @@ export default function UserMenu() {
         <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
           <User className="w-5 h-5" />
         </div>
-        
+
         {/* Name (Ẩn trên mobile để tiết kiệm diện tích) */}
         <div className="flex-col hidden md:flex min-w-[90px] ml-1">
           <span className="text-sm font-bold text-ink leading-tight">NextMe User</span>
-          <span className="text-xs font-medium text-primary leading-tight">Đang trực tuyến</span>
         </div>
-        
+
         {/* Divider */}
         <div className="w-[1px] h-6 bg-border mx-1 hidden md:block"></div>
-        
+
         {/* Nút Exit */}
-        <Link 
-          href="/auth" 
+        <Link
+          href="/auth"
           className="w-10 h-10 rounded-full hover:bg-rose-bg dark:hover:bg-rose-900/30 text-ink-3 hover:text-rose flex items-center justify-center transition-all mr-0.5 active:scale-95"
           title="Đăng xuất"
         >
