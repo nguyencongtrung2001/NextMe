@@ -51,8 +51,16 @@ const timThuThachTheoSlug = async (userId, slug) => {
   await thuThachRepository.ensureFlowersExist();
   const list = await thuThachRepository.timKiemThuThachCuaUser(userId);
   
-  // So khớp in-memory bằng ID hoặc slugified title
-  const found = list.find((c) => c.id === slug || slugifyText(c.title) === slug);
+  // Trích xuất UUID ở cuối slug nếu có (ví dụ: day-som-doc-sach-54738d8c-d94d-42e9-b9e5-0cacaae66cca)
+  const uuidMatch = slug.match(/[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+  const matchedId = uuidMatch ? uuidMatch[0] : null;
+
+  // So khớp in-memory bằng ID, UUID trích xuất hoặc slugified title
+  const found = list.find((c) => 
+    c.id === slug || 
+    (matchedId && c.id === matchedId) || 
+    slugifyText(c.title) === slug
+  );
   if (!found) {
     throw new Error('Không tìm thấy thử thách tương ứng với đường dẫn.');
   }

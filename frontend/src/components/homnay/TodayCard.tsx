@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { cn } from "@/lib/utils";
+import { cn, slugifyText } from "@/lib/utils";
 
 export interface Flower {
   name: string;
@@ -20,6 +20,7 @@ export interface Challenge {
   startDate: string;
   estimatedEndDate: string;
   flower: Flower;
+  historyLogs?: Log[];
 }
 
 export interface Log {
@@ -45,7 +46,7 @@ export default function TodayCard({ challenge, todayLog, currentDay }: TodayCard
   else if (challenge.flower.type === "tulip") flowerClass = "bg-rose-100";
 
   return (
-    <Link href={`/challenges/${challenge.id}`}>
+    <Link href={`/challenges/${slugifyText(challenge.title)}-${challenge.id}`}>
       <article
         className={cn(
           "group rounded-xl p-4 flex flex-col gap-3 transition-all duration-300 hover:shadow-md bg-card cursor-pointer border",

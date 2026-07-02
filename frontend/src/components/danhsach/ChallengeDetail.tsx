@@ -521,7 +521,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
               </div>
 
               {/* Chú giải màu sắc */}
-              <div className="flex flex-wrap gap-4 border-t border-surface-3 pt-4 text-xxs uppercase tracking-wider font-bold text-ink-3">
+              <div className="flex flex-wrap gap-4 border-t border-surface-3 pt-4 text-[10px] uppercase tracking-wider font-bold text-ink-3">
                 <div className="flex items-center gap-1.5">
                   <div className="w-3.5 h-3.5 rounded border border-sage-border bg-sage-bg" />
                   <span>Đã xong</span>

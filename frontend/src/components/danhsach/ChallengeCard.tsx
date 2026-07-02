@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cn } from "@/lib/utils";
+import { cn, slugifyText } from "@/lib/utils";
 
 export interface Flower {
   name: string;
@@ -41,23 +41,9 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
     return `${day}/${month}/${year}`;
   };
 
-  const slugifyText = (text: string) => {
-    if (!text) return "";
-    return text
-      .toString()
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .replace(/[đĐ]/g, "d")
-      .replace(/([^a-z0-9\s-]|_)+/g, "")
-      .trim()
-      .replace(/\s+/g, "-")
-      .replace(/-+/g, "-");
-  };
-
   return (
     <Link
-      href={`/challenges/${slugifyText(challenge.title)}`}
+      href={`/challenges/${slugifyText(challenge.title)}-${challenge.id}`}
       className={cn(
         "group block bg-card border rounded-xl p-5 shadow-sm transition-all duration-300 hover:shadow-md",
         isCompleted

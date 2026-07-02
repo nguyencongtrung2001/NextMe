@@ -5,6 +5,14 @@ const timKiemThuThachCuaUser = async (userId) => {
     where: { userId: parseInt(userId) },
     include: {
       flower: true,
+      historyLogs: {
+        include: {
+          mediaFiles: true,
+        },
+        orderBy: {
+          day: 'asc',
+        },
+      },
     },
     orderBy: {
       createdAt: 'desc',

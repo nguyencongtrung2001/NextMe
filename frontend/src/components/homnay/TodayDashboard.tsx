@@ -4,50 +4,90 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Calendar, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { layDanhSachThuThach, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
+import { getLocalTodayString } from "@/lib/utils";
 import ProgressCard from "./ProgressCard";
-import TodayCard, { Challenge, Log } from "./TodayCard";
+import TodayCard, { Challenge } from "./TodayCard";
 
 function calcCurrentDay(startDateStr: string, totalDays: number) {
   const start = new Date(startDateStr);
   const now = new Date();
-  const diffTime = Math.abs(now.getTime() - start.getTime());
-  const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+  
+  // Thiết lập mốc Midnight để tính toán khoảng cách ngày thuần túy, tránh lệch múi giờ
+  const startZero = new Date(start.getFullYear(), start.getMonth(), start.getDate());
+  const nowZero = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  const diffTime = nowZero.getTime() - startZero.getTime();
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+  
+  if (diffDays < 0) return 0;
   return Math.min(diffDays + 1, totalDays);
 }
 
+const getBannerDateString = () => {
+  const days = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
+  const date = new Date();
+  return `${days[date.getDay()]} - ${date.getDate()}/${date.getMonth() + 1}/${date.getFullYear()}`;
+};
+
 export default function TodayDashboard() {
   const [challenges, setChallenges] = useState<Challenge[]>([]);
-  const [logs, setLogs] = useState<Record<string, Log[]>>({});
   const [isLoaded, setIsLoaded] = useState(false);
-  const [dateString, setDateString] = useState("");
+  const [dateString] = useState(getBannerDateString);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      // 1. Calculate date
-      const days = ["Chủ nhật", "Thứ hai", "Thứ ba", "Thứ tư", "Thứ năm", "Thứ sáu", "Thứ bảy"];
-      const date = new Date();
-      setDateString(`${days[date.getDay()]}, ngày ${date.getDate()} tháng ${date.getMonth() + 1} năm ${date.getFullYear()}`);
+    // 1. Fetch danh sách thử thách từ Backend
+    layDanhSachThuThach()
+      .then((res) => {
+        if (res.success && res.data) {
+          // Ánh xạ dữ liệu CSDL sang cấu trúc frontend quy định
+          const mapped: Challenge[] = res.data.map((c: BackendChallenge) => ({
+            id: c.id,
+            title: c.title,
+            status: c.status.toLowerCase() as "active" | "completed",
+            totalDays: c.totalDays,
+            completedDaysCount: c.completedDaysCount,
+            streak: c.streak,
+            progress: c.progress,
+            startDate: c.startDate,
+            estimatedEndDate: c.estimatedEndDate,
+            flower: {
+              name: c.flower?.nameFlower || "Hướng Dương",
+              type: c.flower?.type || "sunflower",
+              color: c.flower?.color || "var(--amber)",
+              emoji: c.flower?.emoji || "🌻",
+            },
+            historyLogs: c.historyLogs?.map((l: BackendLog) => ({
+              id: l.id,
+              day: l.day,
+              date: l.loggedDate,
+              mood: l.mood || "Bình thường",
+              note: l.note || "",
+              media: l.mediaFiles?.map((m: BackendMediaFile) => ({
+                type: m.type.toLowerCase() as "image" | "video",
+                url: m.url
+              })) || []
+            })) || []
+          }));
 
-      // 2. Fetch state
-      const allChallenges: Challenge[] = JSON.parse(localStorage.getItem("challenges_data") || "[]");
-      const allLogs = JSON.parse(localStorage.getItem("challenges_logs") || "{}");
-
-      setChallenges(allChallenges);
-      setLogs(allLogs);
-      setIsLoaded(true);
-    }, 0);
-
-    return () => clearTimeout(timer);
+          setChallenges(mapped);
+        }
+      })
+      .catch((err) => {
+        console.error("Lỗi khi tải dữ liệu trang Hôm nay:", err);
+      })
+      .finally(() => {
+        setIsLoaded(true);
+      });
   }, []);
 
+  const todayStr = getLocalTodayString();
   const activeChallenges = challenges.filter(c => c.status === "active");
   const totalActive = activeChallenges.length;
+  
   let completedCount = 0;
-
   activeChallenges.forEach(c => {
-    const currentDay = calcCurrentDay(c.startDate, c.totalDays);
-    const challengeLogs = logs[c.id] || [];
-    const hasLogToday = challengeLogs.some(l => l.day === currentDay);
+    const hasLogToday = c.historyLogs?.some(l => l.date.split("T")[0] === todayStr);
     if (hasLogToday) completedCount++;
   });
 
@@ -97,7 +137,7 @@ export default function TodayDashboard() {
               </p>
             </div>
             <Link href="/challenges">
-              <Button className="bg-primary hover:bg-primary-soft text-primary-foreground font-bold px-5 py-2.5 rounded-xl transition-all duration-200">
+              <Button className="bg-primary hover:bg-primary-soft text-primary-foreground font-bold px-5 py-2.5 rounded-xl transition-all duration-200 cursor-pointer">
                 Gieo hạt ngay
               </Button>
             </Link>
@@ -106,8 +146,7 @@ export default function TodayDashboard() {
           <div className="flex flex-col gap-6">
             {activeChallenges.map((c) => {
               const currentDay = calcCurrentDay(c.startDate, c.totalDays);
-              const challengeLogs = logs[c.id] || [];
-              const todayLog = challengeLogs.find((l) => l.day === currentDay);
+              const todayLog = c.historyLogs?.find((l) => l.date.split("T")[0] === todayStr);
 
               return (
                 <TodayCard
