@@ -109,6 +109,12 @@ const capNhatTienDoThuThach = async (challengeId, { completedDaysCount, streak, 
   });
 };
 
+const xoaThuThachTheoId = async (challengeId) => {
+  return await prisma.challenge.delete({
+    where: { id: challengeId },
+  });
+};
+
 module.exports = {
   timKiemThuThachCuaUser,
   timHoaTheoType,
@@ -117,4 +123,5 @@ module.exports = {
   timChiTietThuThachTheoId,
   taoHistoryLog,
   capNhatTienDoThuThach,
+  xoaThuThachTheoId,
 };

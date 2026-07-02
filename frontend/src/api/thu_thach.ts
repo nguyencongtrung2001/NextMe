@@ -132,3 +132,18 @@ export async function guiCheckIn(challengeId: string, duLieu: FormData): Promise
   
   return response.json();
 }
+
+export async function xoaThuThach(challengeId: string): Promise<{ success: boolean; message?: string }> {
+  const response = await fetch(`${API_URL}/${challengeId}`, {
+    method: "DELETE",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Đã xảy ra lỗi khi xóa thử thách");
+  }
+  
+  return response.json();
+}

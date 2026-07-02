@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import { notFound } from "next/navigation";
+import { notFound, useRouter } from "next/navigation";
 import {
   Flame,
   Search,
@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { layChiTietThuThach, guiCheckIn, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
+import { layChiTietThuThach, guiCheckIn, xoaThuThach, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
 
 export interface Flower {
   name: string;
@@ -99,11 +99,34 @@ const styles = `
 `;
 
 export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
+  const router = useRouter();
   const [challenge, setChallenge] = useState<Challenge | null>(null);
   const [challengeLogs, setChallengeLogs] = useState<Log[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState<"overview" | "history">("overview");
+
+  const handleDeleteChallenge = () => {
+    if (!challenge) return;
+    if (window.confirm(`Bạn có chắc chắn muốn xóa thử thách "${challenge.title}"? Mọi nhật ký check-in và file ảnh/video liên quan trên Cloudinary sẽ bị xóa vĩnh viễn.`)) {
+      setIsLoaded(false);
+      xoaThuThach(challenge.id)
+        .then((res) => {
+          if (res.success) {
+            router.push("/challenges");
+          } else {
+            alert(res.message || "Lỗi khi xóa thử thách");
+            setIsLoaded(true);
+          }
+        })
+        .catch((err) => {
+          console.error(err);
+          const error = err as Error;
+          alert(error.message || "Lỗi khi xóa thử thách");
+          setIsLoaded(true);
+        });
+    }
+  };
 
   // Heatmap detail panel selection
   const [selectedDay, setSelectedDay] = useState<number | null>(null);
@@ -395,14 +418,21 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
           </div>
         </div>
 
-        {challenge.streak > 0 && (
-          <div className="flex shrink-0">
+        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+          {challenge.streak > 0 && (
             <div className="inline-flex items-center gap-1.5 bg-primary-bg border border-primary-border px-4 py-2 rounded-full text-sm font-bold text-primary font-mono shadow-sm">
               <Flame className="w-4 h-4 animate-float" />
               <span>{challenge.streak} ngày streak</span>
             </div>
-          </div>
-        )}
+          )}
+          <Button
+            onClick={handleDeleteChallenge}
+            variant="outline"
+            className="border-rose-200 hover:bg-rose-50 text-rose-600 hover:text-rose-700 font-bold px-4 py-2 rounded-full text-xs shadow-sm transition-all duration-200 cursor-pointer"
+          >
+            Xóa thử thách
+          </Button>
+        </div>
       </div>
 
       {/* Tabs */}

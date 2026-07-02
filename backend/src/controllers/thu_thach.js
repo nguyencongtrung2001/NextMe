@@ -91,9 +91,30 @@ const checkInHangNgay = async (req, res) => {
   }
 };
 
+const xoaThuThach = async (req, res) => {
+  try {
+    const userId = req.nguoiDung.id;
+    const challengeId = req.params.id;
+
+    await thuThachService.xuLyXoaThuThach(userId, challengeId);
+
+    return res.status(200).json({
+      success: true,
+      message: 'Xóa thử thách và dọn dẹp dữ liệu đính kèm thành công!',
+    });
+  } catch (error) {
+    console.error('Lỗi khi xóa thử thách:', error);
+    return res.status(400).json({
+      success: false,
+      message: error.message || 'Lỗi khi xóa thử thách',
+    });
+  }
+};
+
 module.exports = {
   layDanhSach,
   taoThuThach,
   layChiTiet,
   checkInHangNgay,
+  xoaThuThach,
 };

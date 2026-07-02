@@ -1,5 +1,5 @@
 const thuThachRepository = require('../repositories/thu_thach');
-const { uploadToCloudinary } = require('../config/cloudinary');
+const { uploadToCloudinary, deleteCloudinaryFolder } = require('../config/cloudinary');
 
 // Hàm helper để chuẩn hóa chuỗi tiếng Việt thành slug URL
 const slugifyText = (text) => {
@@ -51,8 +51,8 @@ const timThuThachTheoSlug = async (userId, slug) => {
   await thuThachRepository.ensureFlowersExist();
   const list = await thuThachRepository.timKiemThuThachCuaUser(userId);
   
-  // So khớp in-memory bằng slugified title
-  const found = list.find((c) => slugifyText(c.title) === slug);
+  // So khớp in-memory bằng ID hoặc slugified title
+  const found = list.find((c) => c.id === slug || slugifyText(c.title) === slug);
   if (!found) {
     throw new Error('Không tìm thấy thử thách tương ứng với đường dẫn.');
   }
@@ -167,9 +167,31 @@ const taoNhatKyCheckIn = async (userId, challengeId, { mood, note, files, slug }
   });
 };
 
+const xuLyXoaThuThach = async (userId, challengeId) => {
+  const challenge = await thuThachRepository.timChiTietThuThachTheoId(challengeId);
+  if (!challenge) {
+    throw new Error('Thử thách không tồn tại.');
+  }
+
+  if (challenge.userId !== parseInt(userId)) {
+    throw new Error('Bạn không có quyền thực hiện hành động này.');
+  }
+
+  // Thư mục chứa hình ảnh/video của thử thách trên Cloudinary: challenges/[slug]
+  const slug = slugifyText(challenge.title);
+  const folderPath = `challenges/${slug}`;
+
+  // 1. Xóa toàn bộ tệp đính kèm và thư mục trên Cloudinary
+  await deleteCloudinaryFolder(folderPath);
+
+  // 2. Xóa bản ghi trong CSDL (Prisma Cascade sẽ tự động xóa historyLogs và mediaFiles)
+  return await thuThachRepository.xoaThuThachTheoId(challengeId);
+};
+
 module.exports = {
   layDanhSachThuThach,
   taoThuThachMoi,
   timThuThachTheoSlug,
   taoNhatKyCheckIn,
+  xuLyXoaThuThach,
 };

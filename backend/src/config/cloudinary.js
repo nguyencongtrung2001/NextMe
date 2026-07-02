@@ -42,8 +42,25 @@ const uploadToCloudinary = (fileBuffer, folderPath, resourceType = 'auto') => {
   });
 };
 
+const deleteCloudinaryFolder = async (folderPath) => {
+  try {
+    // 1. Xóa toàn bộ hình ảnh trong folder
+    await cloudinary.api.delete_resources_by_prefix(folderPath, { resource_type: 'image' });
+    
+    // 2. Xóa toàn bộ video trong folder
+    await cloudinary.api.delete_resources_by_prefix(folderPath, { resource_type: 'video' });
+    
+    // 3. Xóa thư mục rỗng
+    await cloudinary.api.delete_folder(folderPath);
+    console.log(`Đã dọn dẹp xong thư mục trên Cloudinary: ${folderPath}`);
+  } catch (error) {
+    console.warn(`Thông báo dọn dẹp Cloudinary:`, error.message || error);
+  }
+};
+
 module.exports = {
   cloudinary,
   upload,
   uploadToCloudinary,
+  deleteCloudinaryFolder,
 };
