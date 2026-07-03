@@ -1,19 +1,21 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Shield } from "lucide-react";
 import Link from "next/link";
 import { layThongTinProfile } from "@/api/xac_thuc";
 
 export default function UserMenu() {
   const [userName, setUserName] = useState("NextMe User");
+  const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
     let active = true;
     layThongTinProfile()
       .then((res) => {
-        if (active && res.success && res.data && res.data.name) {
-          setUserName(res.data.name);
+        if (active && res.success && res.data) {
+          if (res.data.name) setUserName(res.data.name);
+          if (res.data.role) setRole(res.data.role);
         }
       })
       .catch((err) => {
@@ -39,6 +41,17 @@ export default function UserMenu() {
 
         {/* Divider */}
         <div className="w-[1px] h-6 bg-border mx-1 hidden md:block"></div>
+
+        {/* Nút Admin (Chỉ hiển thị cho ADMIN) */}
+        {role === "ADMIN" && (
+          <Link
+            href="/admin"
+            className="w-10 h-10 rounded-full hover:bg-primary-bg text-ink-3 hover:text-primary flex items-center justify-center transition-all mr-0.5 active:scale-95 border border-border/30"
+            title="Trang quản trị (Admin Panel)"
+          >
+            <Shield className="w-[18px] h-[18px]" />
+          </Link>
+        )}
 
         {/* Nút Exit */}
         <Link

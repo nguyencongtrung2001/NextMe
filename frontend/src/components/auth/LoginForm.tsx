@@ -19,8 +19,12 @@ export default function LoginForm() {
     setErrorMsg("");
     
     try {
-      await goiDangNhap({ email, password });
-      router.push("/"); // Thành công thì về trang chủ
+      const res = await goiDangNhap({ email, password });
+      if (res.nguoiDung && res.nguoiDung.role === "ADMIN") {
+        router.push("/admin");
+      } else {
+        router.push("/");
+      }
     } catch (error: unknown) {
       if (error instanceof Error) {
         setErrorMsg(error.message);

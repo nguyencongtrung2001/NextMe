@@ -16,6 +16,7 @@ export interface NguoiDung {
   id: number;
   email: string;
   name: string | null;
+  role?: string;
 }
 
 // Interface phản hồi chung của API
