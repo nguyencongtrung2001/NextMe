@@ -1,10 +1,11 @@
+const prisma = require('../config/prisma');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'BiMatCuaNextMe2026';
 
 /**
  * Middleware chặn các Route yêu cầu quyền Đăng nhập
  */
-const kiemTraNguoiDung = (req, res, next) => {
+const kiemTraNguoiDung = async (req, res, next) => {
   try {
     // Tự động bóc tách Token từ HTTP-Only Cookie nhờ cookie-parser
     const token = req.cookies.token;
@@ -16,8 +17,22 @@ const kiemTraNguoiDung = (req, res, next) => {
     // Giải mã Token
     const payload = jwt.verify(token, JWT_SECRET);
     
-    // Lưu thông tin người dùng vào object Request để các API phía sau sử dụng
-    req.nguoiDung = payload; 
+    // TRUY VẤN DATABASE để lấy thông tin ĐÚNG và MỚI NHẤT (Chống lỗi cache role cũ)
+    const userRealTime = await prisma.user.findUnique({
+      where: { id: payload.id }
+    });
+
+    if (!userRealTime) {
+      return res.status(404).json({ thongBao: 'Tài khoản không tồn tại!' });
+    }
+
+    // Lưu thông tin người dùng real-time từ DB vào object Request
+    req.nguoiDung = {
+      id: userRealTime.id,
+      email: userRealTime.email,
+      name: userRealTime.name,
+      role: userRealTime.role // Lúc này chắc chắn sẽ lấy role mới nhất từ CSDL
+    }; 
     
     next();
   } catch (error) {
