@@ -248,7 +248,7 @@ const capNhatThuThach = async (userId, challengeId, { title, addDays }) => {
     return challenge; // Không có gì cần update
   }
 
-  return await thuThachRepository.capNhatTienDoThuThach(challengeId, updateData);
+  return await thuThachRepository.capNhatThuThach(challengeId, updateData);
 };
 
 module.exports = {

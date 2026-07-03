@@ -134,6 +134,24 @@ const timTatCaLoaiHoa = async () => {
   return await prisma.flower.findMany();
 };
 
+const capNhatThuThach = async (challengeId, updateData) => {
+  return await prisma.challenge.update({
+    where: { id: challengeId },
+    data: updateData,
+    include: {
+      flower: true,
+      historyLogs: {
+        include: {
+          mediaFiles: true,
+        },
+        orderBy: {
+          day: 'asc',
+        },
+      },
+    },
+  });
+};
+
 module.exports = {
   timKiemThuThachCuaUser,
   timHoaTheoType,
@@ -144,4 +162,5 @@ module.exports = {
   capNhatTienDoThuThach,
   xoaThuThachTheoId,
   timTatCaLoaiHoa,
+  capNhatThuThach,
 };
