@@ -12,7 +12,9 @@ export default function MainLayout({
       <Logo />
       <Navbar />
       <UserMenu />
-      {children}
+      <main className="w-full flex flex-col flex-1 pb-24 md:pb-12">
+        {children}
+      </main>
     </>
   );
 }
