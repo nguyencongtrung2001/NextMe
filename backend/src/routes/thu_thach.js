@@ -19,6 +19,9 @@ router.get('/chi-tiet/:slug', dieuKhien.layChiTiet);
 // Tick check-in tích lũy ngày mới kèm theo upload ảnh / video (tối đa 5 file)
 router.post('/:id/log', upload.array('mediaFiles', 5), dieuKhien.checkInHangNgay);
 
+// Cập nhật thử thách (Title, Add Days)
+router.patch('/:id', dieuKhien.capNhatThuThach);
+
 // Xóa thử thách (và tự động xóa sạch ảnh/video trên Cloudinary)
 router.delete('/:id', dieuKhien.xoaThuThach);
 

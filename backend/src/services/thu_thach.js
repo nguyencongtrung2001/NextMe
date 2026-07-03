@@ -208,6 +208,49 @@ const layDanhSachHoa = async () => {
   return await thuThachRepository.timTatCaLoaiHoa();
 };
 
+const capNhatThuThach = async (userId, challengeId, { title, addDays }) => {
+  const challenge = await thuThachRepository.timChiTietThuThachTheoId(challengeId);
+  if (!challenge) {
+    throw new Error('Thử thách không tồn tại.');
+  }
+
+  if (challenge.userId !== parseInt(userId)) {
+    throw new Error('Bạn không có quyền thực hiện hành động này.');
+  }
+
+  const updateData = {};
+  
+  if (title && title.trim() !== '') {
+    updateData.title = title.trim();
+  }
+
+  if (addDays && parseInt(addDays) > 0) {
+    const parsedAddDays = parseInt(addDays);
+    const newTotalDays = challenge.totalDays + parsedAddDays;
+    
+    // Cộng thêm ngày vào estimatedEndDate cũ
+    const newEndDate = new Date(new Date(challenge.estimatedEndDate).getTime() + parsedAddDays * 24 * 60 * 60 * 1000);
+    
+    updateData.totalDays = newTotalDays;
+    updateData.estimatedEndDate = newEndDate;
+    
+    // Tính lại phần trăm tiến độ
+    const nextProgress = Math.min(Math.round((challenge.completedDaysCount / newTotalDays) * 100), 100);
+    updateData.progress = nextProgress;
+    
+    // Đang hoàn thành mà được gia hạn thì Active trở lại
+    if (challenge.status === 'COMPLETED' && challenge.completedDaysCount < newTotalDays) {
+      updateData.status = 'ACTIVE';
+    }
+  }
+
+  if (Object.keys(updateData).length === 0) {
+    return challenge; // Không có gì cần update
+  }
+
+  return await thuThachRepository.capNhatTienDoThuThach(challengeId, updateData);
+};
+
 module.exports = {
   layDanhSachThuThach,
   taoThuThachMoi,
@@ -215,4 +258,5 @@ module.exports = {
   taoNhatKyCheckIn,
   xuLyXoaThuThach,
   layDanhSachHoa,
+  capNhatThuThach,
 };

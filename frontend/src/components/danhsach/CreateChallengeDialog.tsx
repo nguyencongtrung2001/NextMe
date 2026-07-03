@@ -30,7 +30,7 @@ export default function CreateChallengeDialog({
   onCreate,
 }: CreateChallengeDialogProps) {
   const [title, setTitle] = useState("");
-  const [days, setDays] = useState(66);
+  const [days, setDays] = useState(20);
   const [flowers, setFlowers] = useState<Flower[]>([]);
   const [selectedFlower, setSelectedFlower] = useState<string>("");
 
@@ -54,7 +54,7 @@ export default function CreateChallengeDialog({
     if (!title.trim() || !selectedFlower) return;
     onCreate(title, days, selectedFlower);
     setTitle("");
-    setDays(66);
+    setDays(20);
   };
 
   return (
@@ -97,13 +97,30 @@ export default function CreateChallengeDialog({
             <Label htmlFor="input-days" className="text-xs font-bold text-ink-2 dark:text-ink uppercase tracking-wider">
               Thời gian cam kết (số ngày):
             </Label>
+            <div className="flex gap-2">
+              {[20, 30, 66].map(preset => (
+                <button
+                  key={preset}
+                  type="button"
+                  onClick={() => setDays(preset)}
+                  className={cn(
+                    "px-3 py-1.5 text-xs rounded-lg border font-bold transition-colors",
+                    days === preset 
+                      ? "bg-primary/10 text-primary border-primary/30" 
+                      : "bg-surface-2 text-ink-3 border-border hover:border-primary/30"
+                  )}
+                >
+                  {preset} ngày
+                </button>
+              ))}
+            </div>
             <Input
               id="input-days"
               type="number"
               min={1}
               max={365}
               value={days}
-              onChange={(e) => setDays(parseInt(e.target.value) || 66)}
+              onChange={(e) => setDays(parseInt(e.target.value) || 20)}
               required
               className="h-11 rounded-lg border-border bg-surface text-ink focus-visible:ring-primary"
             />

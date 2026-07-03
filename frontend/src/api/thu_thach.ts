@@ -148,6 +148,27 @@ export async function xoaThuThach(challengeId: string): Promise<{ success: boole
   return response.json();
 }
 
+export interface CapNhatThuThachInput {
+  title?: string;
+  addDays?: number;
+}
+
+export async function capNhatThuThach(challengeId: string, duLieu: CapNhatThuThachInput): Promise<PhanHoiChiTiet> {
+  const response = await fetch(`${API_URL}/${challengeId}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(duLieu),
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Đã xảy ra lỗi khi cập nhật thử thách");
+  }
+
+  return response.json();
+}
+
 export interface PhanHoiDanhSachHoa {
   success: boolean;
   data: Flower[];

@@ -127,6 +127,31 @@ const layDanhSachHoa = async (req, res) => {
   }
 };
 
+const capNhatThuThach = async (req, res) => {
+  try {
+    const userId = req.nguoiDung.id;
+    const challengeId = req.params.id;
+    const { title, addDays } = req.body;
+
+    const thuThachCapNhat = await thuThachService.capNhatThuThach(userId, challengeId, {
+      title,
+      addDays,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: 'Cập nhật thử thách thành công!',
+      data: thuThachCapNhat,
+    });
+  } catch (error) {
+    console.error('Lỗi khi cập nhật thử thách:', error);
+    return res.status(400).json({
+      success: false,
+      message: error.message || 'Lỗi khi cập nhật thử thách',
+    });
+  }
+};
+
 module.exports = {
   layDanhSach,
   taoThuThach,
@@ -134,4 +159,5 @@ module.exports = {
   checkInHangNgay,
   xoaThuThach,
   layDanhSachHoa,
+  capNhatThuThach,
 };

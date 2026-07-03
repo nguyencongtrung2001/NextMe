@@ -16,8 +16,9 @@ import { cn, getFlowerTheme } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { layChiTietThuThach, guiCheckIn, xoaThuThach, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
+import { layChiTietThuThach, guiCheckIn, xoaThuThach, capNhatThuThach, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
 import { MOOD_LIST } from "@/constants";
+import EditChallengeDialog from "./EditChallengeDialog";
 
 export interface Flower {
   name: string;
@@ -100,6 +101,47 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
   const [isLoaded, setIsLoaded] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [activeTab, setActiveTab] = useState<"overview" | "history">("overview");
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+
+  const handleEditChallenge = (title: string, addDays: number) => {
+    if (!challenge) return;
+    setIsLoaded(false);
+    capNhatThuThach(challenge.id, { title, addDays })
+      .then((res) => {
+        if (res.success && res.data) {
+          const updated: BackendChallenge = res.data;
+          const mapped: Challenge = {
+            id: updated.id,
+            title: updated.title,
+            status: updated.status.toLowerCase() as "active" | "completed",
+            totalDays: updated.totalDays,
+            completedDaysCount: updated.completedDaysCount,
+            streak: updated.streak,
+            progress: updated.progress,
+            startDate: updated.startDate,
+            estimatedEndDate: updated.estimatedEndDate,
+            flower: {
+              name: updated.flower?.nameFlower || "Hướng Dương",
+              type: updated.flower?.type || "sunflower",
+              color: updated.flower?.color || "var(--amber)",
+              emoji: updated.flower?.emoji || "🌻",
+            }
+          };
+          setChallenge(mapped);
+          setIsEditDialogOpen(false);
+        } else {
+          alert(res.message || "Lỗi khi cập nhật thử thách");
+        }
+      })
+      .catch((err) => {
+        console.error(err);
+        const error = err as Error;
+        alert(error.message || "Lỗi khi cập nhật thử thách");
+      })
+      .finally(() => {
+        setIsLoaded(true);
+      });
+  };
 
   const handleDeleteChallenge = () => {
     if (!challenge) return;
@@ -420,6 +462,12 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
               <span>{challenge.streak} ngày streak</span>
             </div>
           )}
+          <EditChallengeDialog
+            initialTitle={challenge.title}
+            isOpen={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            onEdit={handleEditChallenge}
+          />
           <Button
             onClick={handleDeleteChallenge}
             variant="outline"
