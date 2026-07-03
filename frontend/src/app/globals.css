@@ -274,3 +274,75 @@
     transform: translateY(0);
   }
 }
+
+/* Theme Colors Switcher Presets */
+
+/* 2. Moss Green */
+.theme-moss {
+  --primary: #58973A;
+  --primary-soft: #91D172;
+  --primary-bg: #F2FAF0;
+  --primary-border: #D4EFCA;
+}
+.theme-moss.dark, .dark .theme-moss {
+  --primary: #91D172;
+  --primary-soft: #A5DC8C;
+  --primary-bg: #1B3310;
+  --primary-border: #2E521D;
+}
+
+/* 3. Ice Blue */
+.theme-ice {
+  --primary: #5471A8;
+  --primary-soft: #ACBEE4;
+  --primary-bg: #F4F7FC;
+  --primary-border: #D5E0F2;
+}
+.theme-ice.dark, .dark .theme-ice {
+  --primary: #ACBEE4;
+  --primary-soft: #C3D2ED;
+  --primary-bg: #182338;
+  --primary-border: #2B3B57;
+}
+
+/* 4. Slate Blue */
+.theme-slate {
+  --primary: #4B68A0;
+  --primary-soft: #86A0D7;
+  --primary-bg: #F0F4FC;
+  --primary-border: #CDDAF2;
+}
+.theme-slate.dark, .dark .theme-slate {
+  --primary: #86A0D7;
+  --primary-soft: #A5BBE4;
+  --primary-bg: #1B2A47;
+  --primary-border: #2F4469;
+}
+
+/* 5. Olive Gold */
+.theme-olive {
+  --primary: #788725;
+  --primary-soft: #AFC44D;
+  --primary-bg: #F8FAE6;
+  --primary-border: #E6EDBA;
+}
+.theme-olive.dark, .dark .theme-olive {
+  --primary: #AFC44D;
+  --primary-soft: #C3D56D;
+  --primary-bg: #252B0B;
+  --primary-border: #3E4717;
+}
+
+/* 6. Bronze Taupe */
+.theme-bronze {
+  --primary: #706846;
+  --primary-soft: #92875C;
+  --primary-bg: #F7F6F0;
+  --primary-border: #DDD9C6;
+}
+.theme-bronze.dark, .dark .theme-bronze {
+  --primary: #92875C;
+  --primary-soft: #ABA27B;
+  --primary-bg: #282517;
+  --primary-border: #423E28;
+}

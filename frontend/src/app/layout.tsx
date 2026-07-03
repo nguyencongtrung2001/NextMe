@@ -36,6 +36,22 @@ export default function RootLayout({
       className={`h-full antialiased ${inter.variable}`}
       suppressHydrationWarning
     >
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var saved = localStorage.getItem('theme-class');
+                  if (saved && saved !== 'theme-blue') {
+                    document.documentElement.classList.add(saved);
+                  }
+                } catch(e) {}
+              })();
+            `
+          }}
+        />
+      </head>
       <body
         className={cn(
           "min-h-full flex flex-col font-sans",
