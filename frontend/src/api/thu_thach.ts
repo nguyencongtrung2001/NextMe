@@ -167,3 +167,31 @@ export async function layDanhSachHoa(): Promise<PhanHoiDanhSachHoa> {
 
   return response.json();
 }
+
+export interface ColorBackground {
+  id: number;
+  name: string;
+  type: string;
+  lightBg: string;
+  lightBorder: string;
+  lightText: string;
+  lightSoft: string;
+  darkBg: string;
+  darkBorder: string;
+  darkText: string;
+  darkSoft: string;
+  createdAt: string;
+}
+
+export async function layDanhSachColorBackgroundsPublic(): Promise<{ success: boolean; data: ColorBackground[] }> {
+  const response = await fetch(`${BACKEND_URL}/api/color-backgrounds`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+
+  if (!response.ok) {
+    throw new Error("Không thể tải danh sách tông màu CSDL");
+  }
+  return response.json();
+}

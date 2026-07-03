@@ -37,7 +37,7 @@ export async function goiDangKy(duLieu: DuLieuDangKy): Promise<PhanHoiApi> {
   return response.json();
 }
 
-export async function layThongTinProfile(): Promise<{ success: boolean; data: { id: number; email: string; name: string; avatarUrl?: string } }> {
+export async function layThongTinProfile(): Promise<{ success: boolean; data: { id: number; email: string; name: string; avatarUrl?: string; role?: string } }> {
   const response = await fetch(`${API_URL}/me`, {
     method: "GET",
     headers: { "Content-Type": "application/json" },

@@ -1,6 +1,5 @@
 datasource db {
   provider = "postgresql"
-  
 }
 
 generator client {
@@ -109,4 +108,21 @@ enum DayStatus {
 enum MediaType {
   IMAGE
   VIDEO
+}
+
+model ColorBackground {
+  id          Int      @id @default(autoincrement())
+  name        String   @unique
+  type        String   @unique
+  lightBg     String   @map("light_bg")
+  lightBorder String   @map("light_border")
+  lightText   String   @map("light_text")
+  lightSoft   String   @map("light_soft")
+  darkBg      String   @map("dark_bg")
+  darkBorder  String   @map("dark_border")
+  darkText    String   @map("dark_text")
+  darkSoft    String   @map("dark_soft")
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("color_backgrounds")
 }

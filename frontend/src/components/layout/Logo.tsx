@@ -2,47 +2,95 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { layDanhSachColorBackgroundsPublic, ColorBackground } from "@/api/thu_thach";
 
-const THEMES = [
-  "theme-blue",
-  "theme-moss",
-  "theme-ice",
-  "theme-slate",
-  "theme-olive",
-  "theme-bronze"
-];
+function applyThemeCSS(theme: ColorBackground) {
+  if (typeof window === "undefined") return;
+  
+  let styleTag = document.getElementById("dynamic-theme-style");
+  if (!styleTag) {
+    styleTag = document.createElement("style");
+    styleTag.id = "dynamic-theme-style";
+    document.head.appendChild(styleTag);
+  }
+
+  const css = `
+    :root {
+      --primary: ${theme.lightText};
+      --primary-soft: ${theme.lightSoft};
+      --primary-bg: ${theme.lightBg};
+      --primary-border: ${theme.lightBorder};
+      --ring: ${theme.lightText};
+    }
+    .dark {
+      --primary: ${theme.darkText};
+      --primary-soft: ${theme.darkSoft};
+      --primary-bg: ${theme.darkBg};
+      --primary-border: ${theme.darkBorder};
+      --ring: ${theme.darkText};
+    }
+  `;
+  styleTag.innerHTML = css;
+
+  localStorage.setItem("theme-active-id", theme.id.toString());
+  localStorage.setItem("theme-css-vars", JSON.stringify({
+    lightText: theme.lightText,
+    lightSoft: theme.lightSoft,
+    lightBg: theme.lightBg,
+    lightBorder: theme.lightBorder,
+    darkText: theme.darkText,
+    darkSoft: theme.darkSoft,
+    darkBg: theme.darkBg,
+    darkBorder: theme.darkBorder
+  }));
+}
 
 export default function Logo() {
-  const [currentThemeIndex, setCurrentThemeIndex] = useState(0);
+  const [themes, setThemes] = useState<ColorBackground[]>([]);
+  const [currentThemeId, setCurrentThemeId] = useState<number | null>(null);
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme-class") || "theme-blue";
-    const idx = THEMES.indexOf(saved);
-    if (idx !== -1) {
-      setTimeout(() => {
-        setCurrentThemeIndex(idx);
-      }, 0);
-    }
+    layDanhSachColorBackgroundsPublic()
+      .then((res) => {
+        if (res.success && res.data && res.data.length > 0) {
+          setThemes(res.data);
+          
+          // Lấy theme đang active từ localStorage
+          const savedId = localStorage.getItem("theme-active-id");
+          if (savedId) {
+            const idNum = parseInt(savedId);
+            const activeTheme = res.data.find(t => t.id === idNum);
+            if (activeTheme) {
+              setCurrentThemeId(idNum);
+              applyThemeCSS(activeTheme);
+              return;
+            }
+          }
+          // Nếu không có, mặc định dùng theme đầu tiên (Ocean Blue)
+          setCurrentThemeId(res.data[0].id);
+          applyThemeCSS(res.data[0]);
+        }
+      })
+      .catch((err) => {
+        console.error("Lỗi khi tải danh sách màu sắc CSDL:", err);
+      });
   }, []);
 
   const handleLogoClick = (e: React.MouseEvent) => {
     e.preventDefault();
     e.stopPropagation();
 
-    const nextIdx = (currentThemeIndex + 1) % THEMES.length;
-    const prevTheme = THEMES[currentThemeIndex];
-    const nextTheme = THEMES[nextIdx];
+    if (themes.length === 0 || currentThemeId === null) return;
 
-    const doc = document.documentElement;
-    if (prevTheme !== "theme-blue") {
-      doc.classList.remove(prevTheme);
-    }
-    if (nextTheme !== "theme-blue") {
-      doc.classList.add(nextTheme);
-    }
+    const currentIdx = themes.findIndex((t) => t.id === currentThemeId);
+    if (currentIdx === -1) return;
 
-    localStorage.setItem("theme-class", nextTheme);
-    setCurrentThemeIndex(nextIdx);
+    const nextIdx = (currentIdx + 1) % themes.length;
+    const nextTheme = themes[nextIdx];
+
+    applyThemeCSS(nextTheme);
+    setCurrentThemeId(nextTheme.id);
+    localStorage.setItem("theme-active-id", nextTheme.id.toString());
   };
 
   return (

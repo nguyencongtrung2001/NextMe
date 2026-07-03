@@ -8,6 +8,8 @@ const cookieParser = require('cookie-parser');
 // Gọi các tuyến đường (Routes)
 const tuyenDuongXacThuc = require('./routes/xac_thuc');
 const tuyenDuongThuThach = require('./routes/thu_thach');
+const tuyenDuongAdmin = require('./routes/admin');
+const tuyenDuongColorBackground = require('./routes/color_background');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -30,6 +32,8 @@ app.use(cors({
 // Định tuyến API
 app.use('/api/xac-thuc', tuyenDuongXacThuc);
 app.use('/api/thu-thach', tuyenDuongThuThach);
+app.use('/api/admin', tuyenDuongAdmin);
+app.use('/api/color-backgrounds', tuyenDuongColorBackground);
 
 // API kiểm tra trạng thái
 app.get('/', (req, res) => {

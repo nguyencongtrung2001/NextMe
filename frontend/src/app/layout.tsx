@@ -42,9 +42,13 @@ export default function RootLayout({
             __html: `
               (function() {
                 try {
-                  var saved = localStorage.getItem('theme-class');
-                  if (saved && saved !== 'theme-blue') {
-                    document.documentElement.classList.add(saved);
+                  var saved = localStorage.getItem('theme-css-vars');
+                  if (saved) {
+                    var theme = JSON.parse(saved);
+                    var styleTag = document.createElement('style');
+                    styleTag.id = 'dynamic-theme-style';
+                    styleTag.innerHTML = ':root { --primary: ' + theme.lightText + '; --primary-soft: ' + theme.lightSoft + '; --primary-bg: ' + theme.lightBg + '; --primary-border: ' + theme.lightBorder + '; --ring: ' + theme.lightText + '; } .dark { --primary: ' + theme.darkText + '; --primary-soft: ' + theme.darkSoft + '; --primary-bg: ' + theme.darkBg + '; --primary-border: ' + theme.darkBorder + '; --ring: ' + theme.darkText + '; }';
+                    document.head.appendChild(styleTag);
                   }
                 } catch(e) {}
               })();
