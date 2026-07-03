@@ -62,6 +62,7 @@ const xuLyDangNhap = async ({ email, password }) => {
       id: nguoiDung.id,
       email: nguoiDung.email,
       name: nguoiDung.name,
+      role: nguoiDung.role,
     },
   };
 };
@@ -76,6 +77,7 @@ const layThongTinNguoiDung = async (userId) => {
     email: user.email,
     name: user.name,
     avatarUrl: user.avatarUrl,
+    role: user.role,
   };
 };
 
