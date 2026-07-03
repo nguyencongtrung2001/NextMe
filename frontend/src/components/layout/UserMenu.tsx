@@ -45,7 +45,7 @@ export default function UserMenu() {
         {/* Nút Admin (Chỉ hiển thị cho ADMIN) */}
         {role === "ADMIN" && (
           <Link
-            href="/admin"
+            href="/admin/users"
             className="w-10 h-10 rounded-full hover:bg-primary-bg text-ink-3 hover:text-primary flex items-center justify-center transition-all mr-0.5 active:scale-95 border border-border/30"
             title="Trang quản trị (Admin Panel)"
           >

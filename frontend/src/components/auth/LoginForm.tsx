@@ -21,7 +21,7 @@ export default function LoginForm() {
     try {
       const res = await goiDangNhap({ email, password });
       if (res.nguoiDung && res.nguoiDung.role === "ADMIN") {
-        router.push("/admin");
+        router.push("/admin/users");
       } else {
         router.push("/");
       }
