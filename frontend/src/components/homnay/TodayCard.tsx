@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { cn, slugifyText } from "@/lib/utils";
+import { cn, slugifyText, getFlowerTheme } from "@/lib/utils";
 
 export interface Flower {
   name: string;
@@ -41,9 +41,7 @@ interface TodayCardProps {
 export default function TodayCard({ challenge, todayLog, currentDay }: TodayCardProps) {
   const completed = !!todayLog;
 
-  let flowerClass = "bg-amber-100";
-  if (challenge.flower.type === "lavender") flowerClass = "bg-slate-100 dark:bg-stone-850";
-  else if (challenge.flower.type === "tulip") flowerClass = "bg-rose-100";
+  const theme = getFlowerTheme(challenge.flower.type);
 
   return (
     <Link href={`/challenges/${slugifyText(challenge.title)}-${challenge.id}`}>
@@ -57,10 +55,12 @@ export default function TodayCard({ challenge, todayLog, currentDay }: TodayCard
       >
         <div className="flex items-center gap-3.5">
           <div
-            className={cn(
-              "w-10 h-10 rounded-full flex items-center justify-center text-lg border border-black/5 shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105",
-              flowerClass
-            )}
+            className="w-10 h-10 rounded-full flex items-center justify-center text-lg border border-black/5 shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"
+            style={{
+              backgroundColor: theme.bg,
+              borderColor: theme.border,
+              color: theme.text,
+            }}
           >
             {challenge.flower.emoji}
           </div>

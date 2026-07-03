@@ -4,7 +4,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Loader2, Flower, Compass, Sprout, Calendar, Flame, Info } from "lucide-react";
 import { layDanhSachThuThach, Challenge as BackendChallenge } from "@/api/thu_thach";
-import { slugifyText } from "@/lib/utils";
+import { slugifyText, getFlowerTheme } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 
@@ -254,17 +254,16 @@ export default function GardenDashboard() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {growingChallenges.map((c) => {
-              let seedlingClass = "bg-amber-500/10 border-amber-500/20";
-              if (c.flower.type === "lavender") seedlingClass = "bg-purple-500/10 border-purple-500/20";
-              else if (c.flower.type === "tulip") seedlingClass = "bg-rose-500/10 border-rose-500/20";
+              const theme = getFlowerTheme(c.flower.type);
 
               return (
                 <div
                   key={c.id}
-                  className={cn(
-                    "border rounded-2xl p-4 flex gap-4 items-center bg-card shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-transform hover:-translate-y-0.5",
-                    seedlingClass
-                  )}
+                  className="border rounded-2xl p-4 flex gap-4 items-center bg-card shadow-[0_1px_2px_rgba(0,0,0,0.01)] transition-transform hover:-translate-y-0.5"
+                  style={{
+                    backgroundColor: theme.bg,
+                    borderColor: theme.border,
+                  }}
                 >
                   {/* Floating seed emoji */}
                   <div className="w-12 h-12 rounded-full bg-white dark:bg-stone-800 flex items-center justify-center text-2xl border border-black/5 shrink-0 shadow-sm animate-float">

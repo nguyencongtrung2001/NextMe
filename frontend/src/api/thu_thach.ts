@@ -78,12 +78,12 @@ export async function layDanhSachThuThach(): Promise<PhanHoiDanhSach> {
     headers: { "Content-Type": "application/json" },
     credentials: "include",
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Đã có lỗi xảy ra khi lấy danh sách thử thách");
   }
-  
+
   return response.json();
 }
 
@@ -94,12 +94,12 @@ export async function taoThuThach(duLieu: TaoThuThachInput): Promise<PhanHoiTaoM
     body: JSON.stringify(duLieu),
     credentials: "include",
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Đã có lỗi xảy ra khi tạo thử thách");
   }
-  
+
   return response.json();
 }
 
@@ -109,27 +109,27 @@ export async function layChiTietThuThach(slug: string): Promise<PhanHoiChiTiet> 
     headers: { "Content-Type": "application/json" },
     credentials: "include",
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Không thể tải chi tiết thử thách");
   }
-  
+
   return response.json();
 }
 
 export async function guiCheckIn(challengeId: string, duLieu: FormData): Promise<PhanHoiChiTiet> {
   const response = await fetch(`${API_URL}/${challengeId}/log`, {
     method: "POST",
-    body: duLieu, // Khi gửi FormData không được set Content-Type header bằng tay để trình duyệt tự điền boundary
+    body: duLieu,
     credentials: "include",
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Không thể thực hiện ghi nhận check-in");
   }
-  
+
   return response.json();
 }
 
@@ -139,12 +139,12 @@ export async function xoaThuThach(challengeId: string): Promise<{ success: boole
     headers: { "Content-Type": "application/json" },
     credentials: "include",
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Đã xảy ra lỗi khi xóa thử thách");
   }
-  
+
   return response.json();
 }
 
@@ -159,11 +159,11 @@ export async function layDanhSachHoa(): Promise<PhanHoiDanhSachHoa> {
     headers: { "Content-Type": "application/json" },
     credentials: "include",
   });
-  
+
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Đã có lỗi xảy ra khi lấy danh sách loài hoa");
   }
-  
+
   return response.json();
 }

@@ -12,7 +12,7 @@ import {
   X,
   Loader2,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { cn, getFlowerTheme } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -352,9 +352,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
     .filter((log) => log.mood.toLowerCase().includes(searchQuery.toLowerCase()))
     .sort((a, b) => b.day - a.day);
 
-  let flowerBannerClass = "bg-amber-100";
-  if (challenge.flower.type === "lavender") flowerBannerClass = "bg-slate-100 dark:bg-stone-850";
-  else if (challenge.flower.type === "tulip") flowerBannerClass = "bg-rose-100";
+  const theme = getFlowerTheme(challenge.flower.type);
 
   return (
     <div className="flex flex-col gap-6 md:gap-8 w-full">
@@ -380,10 +378,12 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
       <div className="bg-card border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
         <div className="flex items-center gap-4 flex-wrap">
           <div
-            className={cn(
-              "w-14 h-14 rounded-full flex items-center justify-center text-2xl border border-black/5 shrink-0 shadow-sm transition-transform duration-300 hover:animate-wobble cursor-pointer",
-              flowerBannerClass
-            )}
+            className="w-14 h-14 rounded-full flex items-center justify-center text-2xl border border-black/5 shrink-0 shadow-sm transition-transform duration-300 hover:animate-wobble cursor-pointer"
+            style={{
+              backgroundColor: theme.bg,
+              borderColor: theme.border,
+              color: theme.text,
+            }}
           >
             {challenge.flower.emoji}
           </div>

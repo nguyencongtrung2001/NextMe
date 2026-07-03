@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { cn, slugifyText } from "@/lib/utils";
+import { cn, slugifyText, getFlowerTheme } from "@/lib/utils";
 
 export interface Flower {
   name: string;
@@ -28,9 +28,7 @@ interface ChallengeCardProps {
 export default function ChallengeCard({ challenge }: ChallengeCardProps) {
   const isCompleted = challenge.status === "completed";
 
-  let flowerClass = "bg-amber-100";
-  if (challenge.flower.type === "lavender") flowerClass = "bg-slate-100 dark:bg-stone-850";
-  else if (challenge.flower.type === "tulip") flowerClass = "bg-rose-100";
+  const theme = getFlowerTheme(challenge.flower.type);
 
   const formatDate = (isoString: string) => {
     if (!isoString) return "";
@@ -53,10 +51,12 @@ export default function ChallengeCard({ challenge }: ChallengeCardProps) {
     >
       <div className="flex items-start gap-4">
         <div
-          className={cn(
-            "w-11 h-11 rounded-full flex items-center justify-center text-xl border border-black/5 shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105",
-            flowerClass
-          )}
+          className="w-11 h-11 rounded-full flex items-center justify-center text-xl border border-black/5 shrink-0 shadow-sm transition-transform duration-300 group-hover:scale-105"
+          style={{
+            backgroundColor: theme.bg,
+            borderColor: theme.border,
+            color: theme.text,
+          }}
         >
           {challenge.flower.emoji}
         </div>
