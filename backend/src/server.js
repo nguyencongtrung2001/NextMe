@@ -20,12 +20,21 @@ app.use(morgan('dev'));
 app.use(express.json());
 app.use(cookieParser());
 
-// Cấu hình CORS - Cho phép nhận Token Cookie từ Next.js
+// Cấu hình CORS - Cho phép nhận Token Cookie từ Next.js với dynamic origins cho Vercel preview
 app.use(cors({
-  origin: [
-    'http://localhost:3000', 
-    'https://next-me-opal.vercel.app' // Thêm tên miền Vercel của bạn
-  ],
+  origin: function (origin, callback) {
+    if (!origin) return callback(null, true);
+    
+    const isAllowed = origin === 'http://localhost:3000' || 
+                      origin === 'https://next-me-opal.vercel.app' || 
+                      origin.endsWith('.vercel.app');
+
+    if (isAllowed) {
+      callback(null, true);
+    } else {
+      callback(new Error('Blocked by CORS'));
+    }
+  },
   credentials: true, // BẮT BUỘC để nhận/gửi Cookie
 }));
 
