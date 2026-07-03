@@ -179,11 +179,7 @@ export default function GardenDashboard() {
                     {c.flower.emoji}
                   </div>
 
-                  {/* Little green stem */}
-                  <div className="w-1 h-8 bg-emerald-600/60 dark:bg-emerald-500/40 rounded-full -mt-1 group-hover:bg-emerald-600 transition-colors" />
 
-                  {/* Detached shadow */}
-                  <div className="w-3 h-0.5 bg-black/10 dark:bg-white/5 rounded-full filter blur-[0.5px]" />
 
                   {/* Active selection dot indicator */}
                   {isSelected && (
