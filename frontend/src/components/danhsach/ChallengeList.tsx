@@ -61,7 +61,7 @@ export default function ChallengeList() {
   const handleCreateChallenge = async (
     title: string,
     days: number,
-    flower: "sunflower" | "lavender" | "tulip"
+    flower: string
   ) => {
     try {
       const response = await taoThuThach({

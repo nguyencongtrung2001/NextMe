@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -16,11 +16,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { layDanhSachHoa, Flower } from "@/api/thu_thach";
 
 interface CreateChallengeDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (title: string, days: number, flower: "sunflower" | "lavender" | "tulip") => void;
+  onCreate: (title: string, days: number, flowerType: string) => void;
 }
 
 export default function CreateChallengeDialog({
@@ -30,15 +31,30 @@ export default function CreateChallengeDialog({
 }: CreateChallengeDialogProps) {
   const [title, setTitle] = useState("");
   const [days, setDays] = useState(66);
-  const [selectedFlower, setSelectedFlower] = useState<"sunflower" | "lavender" | "tulip">("sunflower");
+  const [flowers, setFlowers] = useState<Flower[]>([]);
+  const [selectedFlower, setSelectedFlower] = useState<string>("");
+
+  useEffect(() => {
+    if (isOpen) {
+      layDanhSachHoa()
+        .then((res) => {
+          if (res.success && res.data && res.data.length > 0) {
+            setFlowers(res.data);
+            setSelectedFlower(res.data[0].type);
+          }
+        })
+        .catch((err) => {
+          console.error("Lỗi khi tải danh sách loài hoa từ DB:", err);
+        });
+    }
+  }, [isOpen]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
+    if (!title.trim() || !selectedFlower) return;
     onCreate(title, days, selectedFlower);
     setTitle("");
     setDays(66);
-    setSelectedFlower("sunflower");
   };
 
   return (
@@ -97,33 +113,33 @@ export default function CreateChallengeDialog({
             <Label className="text-xs font-bold text-ink-2 dark:text-ink uppercase tracking-wider">
               Chọn hạt giống loài hoa:
             </Label>
-            <div className="grid grid-cols-3 gap-3">
-              {[
-                { type: "sunflower" as const, emoji: "🌻", name: "Hướng Dương" },
-                { type: "lavender" as const, emoji: "🪻", name: "Oải Hương" },
-                { type: "tulip" as const, emoji: "🌷", name: "Tulip" },
-              ].map((f) => {
-                const isSelected = selectedFlower === f.type;
-                return (
-                  <button
-                    key={f.type}
-                    type="button"
-                    onClick={() => setSelectedFlower(f.type)}
-                    className={cn(
-                      "flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200 cursor-pointer bg-surface",
-                      isSelected
-                        ? "border-primary ring-2 ring-primary/10 shadow-sm font-semibold scale-102"
-                        : "border-border hover:border-primary-border"
-                    )}
-                  >
-                    <span className="text-2xl mb-1">{f.emoji}</span>
-                    <span className="text-xxs md:text-xs text-ink-3 dark:text-ink-4 text-center line-clamp-1">
-                      {f.name}
-                    </span>
-                  </button>
-                );
-              })}
-            </div>
+            {flowers.length === 0 ? (
+              <div className="text-center py-4 text-xs text-ink-4">Đang tải danh sách hạt giống...</div>
+            ) : (
+              <div className="grid grid-cols-3 gap-3 max-h-[160px] overflow-y-auto pr-1">
+                {flowers.map((f) => {
+                  const isSelected = selectedFlower === f.type;
+                  return (
+                    <button
+                      key={f.type}
+                      type="button"
+                      onClick={() => setSelectedFlower(f.type)}
+                      className={cn(
+                        "flex flex-col items-center justify-center p-3 rounded-xl border transition-all duration-200 cursor-pointer bg-surface",
+                        isSelected
+                          ? "border-primary ring-2 ring-primary/10 shadow-sm font-semibold scale-102"
+                          : "border-border hover:border-primary-border"
+                      )}
+                    >
+                      <span className="text-2xl mb-1">{f.emoji}</span>
+                      <span className="text-xxs md:text-xs text-ink-3 dark:text-ink-4 text-center line-clamp-1">
+                        {f.nameFlower}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            )}
           </div>
 
           <DialogFooter className="mt-4 gap-2">

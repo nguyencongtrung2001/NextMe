@@ -203,10 +203,16 @@ const xuLyXoaThuThach = async (userId, challengeId) => {
   return await thuThachRepository.xoaThuThachTheoId(challengeId);
 };
 
+const layDanhSachHoa = async () => {
+  await thuThachRepository.ensureFlowersExist();
+  return await thuThachRepository.timTatCaLoaiHoa();
+};
+
 module.exports = {
   layDanhSachThuThach,
   taoThuThachMoi,
   timThuThachTheoSlug,
   taoNhatKyCheckIn,
   xuLyXoaThuThach,
+  layDanhSachHoa,
 };

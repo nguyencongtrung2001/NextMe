@@ -10,6 +10,9 @@ router.use(kiemTraNguoiDung);
 router.get('/', dieuKhien.layDanhSach);
 router.post('/', dieuKhien.taoThuThach);
 
+// Lấy danh sách toàn bộ các loài hoa có sẵn trong CSDL
+router.get('/loai-hoa', dieuKhien.layDanhSachHoa);
+
 // Lấy chi tiết thử thách theo URL slug
 router.get('/chi-tiet/:slug', dieuKhien.layChiTiet);
 

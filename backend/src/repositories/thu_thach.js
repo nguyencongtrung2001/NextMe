@@ -130,6 +130,10 @@ const xoaThuThachTheoId = async (challengeId) => {
   });
 };
 
+const timTatCaLoaiHoa = async () => {
+  return await prisma.flower.findMany();
+};
+
 module.exports = {
   timKiemThuThachCuaUser,
   timHoaTheoType,
@@ -139,4 +143,5 @@ module.exports = {
   taoHistoryLog,
   capNhatTienDoThuThach,
   xoaThuThachTheoId,
+  timTatCaLoaiHoa,
 };

@@ -4,7 +4,7 @@ const API_URL = `${BACKEND_URL}/api/thu-thach`;
 export interface Flower {
   id: number;
   nameFlower: string;
-  type: "sunflower" | "lavender" | "tulip";
+  type: string;
   color: string;
   emoji: string;
   createdAt: string;
@@ -52,7 +52,7 @@ export interface Challenge {
 export interface TaoThuThachInput {
   title: string;
   totalDays: number;
-  flowerType: "sunflower" | "lavender" | "tulip";
+  flowerType: string;
 }
 
 export interface PhanHoiDanhSach {
@@ -143,6 +143,26 @@ export async function xoaThuThach(challengeId: string): Promise<{ success: boole
   if (!response.ok) {
     const errorData = await response.json();
     throw new Error(errorData.message || "Đã xảy ra lỗi khi xóa thử thách");
+  }
+  
+  return response.json();
+}
+
+export interface PhanHoiDanhSachHoa {
+  success: boolean;
+  data: Flower[];
+}
+
+export async function layDanhSachHoa(): Promise<PhanHoiDanhSachHoa> {
+  const response = await fetch(`${API_URL}/loai-hoa`, {
+    method: "GET",
+    headers: { "Content-Type": "application/json" },
+    credentials: "include",
+  });
+  
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.message || "Đã có lỗi xảy ra khi lấy danh sách loài hoa");
   }
   
   return response.json();

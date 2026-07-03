@@ -3,7 +3,7 @@ import { cn, slugifyText } from "@/lib/utils";
 
 export interface Flower {
   name: string;
-  type: "sunflower" | "lavender" | "tulip";
+  type: string;
   color: string;
   emoji: string;
 }

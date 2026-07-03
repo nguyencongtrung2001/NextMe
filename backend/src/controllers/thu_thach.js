@@ -111,10 +111,27 @@ const xoaThuThach = async (req, res) => {
   }
 };
 
+const layDanhSachHoa = async (req, res) => {
+  try {
+    const hoa = await thuThachService.layDanhSachHoa();
+    return res.status(200).json({
+      success: true,
+      data: hoa,
+    });
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách loài hoa:', error);
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Lỗi khi lấy danh sách loài hoa',
+    });
+  }
+};
+
 module.exports = {
   layDanhSach,
   taoThuThach,
   layChiTiet,
   checkInHangNgay,
   xoaThuThach,
+  layDanhSachHoa,
 };

@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button";
 
 interface FlowerInfo {
   name: string;
-  type: "sunflower" | "lavender" | "tulip";
+  type: string;
   color: string;
   emoji: string;
 }

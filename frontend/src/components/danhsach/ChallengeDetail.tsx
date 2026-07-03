@@ -17,10 +17,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { layChiTietThuThach, guiCheckIn, xoaThuThach, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
+import { MOOD_LIST } from "@/constants";
 
 export interface Flower {
   name: string;
-  type: "sunflower" | "lavender" | "tulip";
+  type: string;
   color: string;
   emoji: string;
 }
@@ -75,13 +76,7 @@ interface ChallengeDetailProps {
   slug: string;
 }
 
-const MOOD_LIST = [
-  { emoji: "🔥", label: "Cực sung", dataMood: "sung" },
-  { emoji: "✨", label: "Tuyệt vời", dataMood: "tot" },
-  { emoji: "🌱", label: "Bình thường", dataMood: "binhthuong" },
-  { emoji: "🌧️", label: "Hơi mệt", dataMood: "met" },
-  { emoji: "🥀", label: "Rất mệt", dataMood: "ratmet" },
-];
+
 
 const styles = `
   @keyframes fall {
