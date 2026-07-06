@@ -49,6 +49,11 @@ app.get('/', (req, res) => {
   res.send('NextMe Backend đang chạy mượt mà...');
 });
 
+// API Health Check chống ngủ đông (Render)
+app.get('/api/health-check', (req, res) => {
+  res.status(200).json({ status: "OK", timestamp: new Date() });
+});
+
 // Xử lý lỗi hệ thống (Error Handler)
 app.use((err, req, res, next) => {
   console.error(err.stack);
