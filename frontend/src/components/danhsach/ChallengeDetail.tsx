@@ -19,7 +19,6 @@ import { Label } from "@/components/ui/label";
 import { layChiTietThuThach, guiCheckIn, xoaThuThach, capNhatThuThach, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
 import { MOOD_LIST } from "@/constants";
 import EditChallengeDialog from "./EditChallengeDialog";
-import CoachMascot from "./CoachMascot";
 
 export interface Flower {
   name: string;
@@ -416,13 +415,6 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
           }}
         />
       ))}
-
-      {/* KÍCH HOẠT DORAEMON DUOLINGO STYLE TẠI ĐÂY */}
-      <CoachMascot 
-        progress={challenge.progress || 0}
-        isTodayCompleted={hasLogToday}
-        challengeTitle={challenge.title}
-      />
 
       {/* Detail Banner Card */}
       <div className="bg-card border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
