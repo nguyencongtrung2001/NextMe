@@ -150,7 +150,7 @@ export async function xoaThuThach(challengeId: string): Promise<{ success: boole
 
 export interface CapNhatThuThachInput {
   title?: string;
-  addDays?: number;
+  totalDays?: number;
 }
 
 export async function capNhatThuThach(challengeId: string, duLieu: CapNhatThuThachInput): Promise<PhanHoiChiTiet> {

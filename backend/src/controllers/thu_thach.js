@@ -131,11 +131,11 @@ const capNhatThuThach = async (req, res) => {
   try {
     const userId = req.nguoiDung.id;
     const challengeId = req.params.id;
-    const { title, addDays } = req.body;
+    const { title, totalDays } = req.body;
 
     const thuThachCapNhat = await thuThachService.capNhatThuThach(userId, challengeId, {
       title,
-      addDays,
+      totalDays,
     });
 
     return res.status(200).json({

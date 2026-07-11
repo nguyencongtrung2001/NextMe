@@ -208,7 +208,7 @@ const layDanhSachHoa = async () => {
   return await thuThachRepository.timTatCaLoaiHoa();
 };
 
-const capNhatThuThach = async (userId, challengeId, { title, addDays }) => {
+const capNhatThuThach = async (userId, challengeId, { title, totalDays }) => {
   const challenge = await thuThachRepository.timChiTietThuThachTheoId(challengeId);
   if (!challenge) {
     throw new Error('Thử thách không tồn tại.');
@@ -224,22 +224,27 @@ const capNhatThuThach = async (userId, challengeId, { title, addDays }) => {
     updateData.title = title.trim();
   }
 
-  if (addDays && parseInt(addDays) > 0) {
-    const parsedAddDays = parseInt(addDays);
-    const newTotalDays = challenge.totalDays + parsedAddDays;
+  if (totalDays && parseInt(totalDays) > 0) {
+    const parsedTotalDays = parseInt(totalDays);
     
-    // Cộng thêm ngày vào estimatedEndDate cũ
-    const newEndDate = new Date(new Date(challenge.estimatedEndDate).getTime() + parsedAddDays * 24 * 60 * 60 * 1000);
+    if (parsedTotalDays < challenge.completedDaysCount) {
+      throw new Error('Số ngày cam kết không thể nhỏ hơn số ngày bạn đã hoàn thành.');
+    }
+
+    // Tính lại ngày kết thúc ước tính từ ngày bắt đầu
+    const newEndDate = new Date(new Date(challenge.startDate).getTime() + parsedTotalDays * 24 * 60 * 60 * 1000);
     
-    updateData.totalDays = newTotalDays;
+    updateData.totalDays = parsedTotalDays;
     updateData.estimatedEndDate = newEndDate;
     
     // Tính lại phần trăm tiến độ
-    const nextProgress = Math.min(Math.round((challenge.completedDaysCount / newTotalDays) * 100), 100);
+    const nextProgress = Math.min(Math.round((challenge.completedDaysCount / parsedTotalDays) * 100), 100);
     updateData.progress = nextProgress;
     
-    // Đang hoàn thành mà được gia hạn thì Active trở lại
-    if (challenge.status === 'COMPLETED' && challenge.completedDaysCount < newTotalDays) {
+    // Cập nhật trạng thái
+    if (challenge.completedDaysCount >= parsedTotalDays) {
+      updateData.status = 'COMPLETED';
+    } else if (challenge.status === 'COMPLETED' && challenge.completedDaysCount < parsedTotalDays) {
       updateData.status = 'ACTIVE';
     }
   }

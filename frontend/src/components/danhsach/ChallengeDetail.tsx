@@ -103,10 +103,10 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
   const [activeTab, setActiveTab] = useState<"overview" | "history">("overview");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
-  const handleEditChallenge = (title: string, addDays: number) => {
+  const handleEditChallenge = (title: string, totalDays: number) => {
     if (!challenge) return;
     setIsLoaded(false);
-    capNhatThuThach(challenge.id, { title, addDays })
+    capNhatThuThach(challenge.id, { title, totalDays })
       .then((res) => {
         if (res.success && res.data) {
           const updated: BackendChallenge = res.data;
@@ -464,6 +464,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
           )}
           <EditChallengeDialog
             initialTitle={challenge.title}
+            initialTotalDays={challenge.totalDays}
             isOpen={isEditDialogOpen}
             onOpenChange={setIsEditDialogOpen}
             onEdit={handleEditChallenge}

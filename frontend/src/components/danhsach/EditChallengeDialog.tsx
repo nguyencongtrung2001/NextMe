@@ -18,33 +18,35 @@ import { Label } from "@/components/ui/label";
 
 interface EditChallengeDialogProps {
   initialTitle: string;
+  initialTotalDays: number;
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
-  onEdit: (title: string, addDays: number) => void;
+  onEdit: (title: string, totalDays: number) => void;
 }
 
 export default function EditChallengeDialog({
   initialTitle,
+  initialTotalDays,
   isOpen,
   onOpenChange,
   onEdit,
 }: EditChallengeDialogProps) {
   const [title, setTitle] = useState(initialTitle);
-  const [addDays, setAddDays] = useState(0);
+  const [totalDays, setTotalDays] = useState(initialTotalDays);
 
   useEffect(() => {
     if (isOpen) {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setTitle(initialTitle);
       // eslint-disable-next-line react-hooks/set-state-in-effect
-      setAddDays(0);
+      setTotalDays(initialTotalDays);
     }
-  }, [isOpen, initialTitle]);
+  }, [isOpen, initialTitle, initialTotalDays]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!title.trim()) return;
-    onEdit(title, addDays);
+    if (!title.trim() || totalDays < 1) return;
+    onEdit(title, totalDays);
   };
 
   return (
@@ -63,7 +65,7 @@ export default function EditChallengeDialog({
             Chỉnh sửa Thử thách
           </DialogTitle>
           <DialogDescription className="text-ink-4 text-xs mt-1">
-            Bạn có thể đổi tên thử thách hoặc gia hạn thêm số ngày cam kết.
+            Bạn có thể đổi tên thử thách hoặc thay đổi tổng số ngày cam kết.
           </DialogDescription>
         </DialogHeader>
 
@@ -84,18 +86,18 @@ export default function EditChallengeDialog({
 
           <div className="flex flex-col gap-2">
             <Label htmlFor="edit-days" className="text-xs font-bold text-ink-2 dark:text-ink uppercase tracking-wider">
-              Gia hạn thêm ngày (nếu muốn):
+              Tổng số ngày cam kết:
             </Label>
             <p className="text-[10px] text-ink-4 -mt-1 mb-1">
-              Điền số ngày bạn muốn duy trì thêm. Bỏ trống hoặc điền 0 nếu không muốn gia hạn.
+              Bạn có thể tăng hoặc giảm số ngày. Không thể nhỏ hơn số ngày đã hoàn thành.
             </p>
             <Input
               id="edit-days"
               type="number"
-              min={0}
-              max={365}
-              value={addDays}
-              onChange={(e) => setAddDays(parseInt(e.target.value) || 0)}
+              min={1}
+              max={1000}
+              value={totalDays}
+              onChange={(e) => setTotalDays(parseInt(e.target.value) || 0)}
               className="h-11 rounded-lg border-border bg-surface text-ink focus-visible:ring-primary"
             />
           </div>
