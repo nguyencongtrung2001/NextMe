@@ -456,27 +456,35 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0 flex-wrap">
-          {challenge.streak > 0 && (
-            <div className="inline-flex items-center gap-1.5 bg-primary-bg border border-primary-border px-4 py-2 rounded-full text-sm font-bold text-primary font-mono shadow-sm">
-              <Flame className="w-4 h-4 animate-float" />
-              <span>{challenge.streak} ngày streak</span>
-            </div>
-          )}
-          <EditChallengeDialog
-            initialTitle={challenge.title}
-            initialTotalDays={challenge.totalDays}
-            isOpen={isEditDialogOpen}
-            onOpenChange={setIsEditDialogOpen}
-            onEdit={handleEditChallenge}
+        <div className="flex flex-col items-end gap-2 shrink-0 relative w-full md:w-auto">
+          <CheerMascot
+            streak={challenge.streak}
+            isCompleted={isChallengeCompleted}
+            hasLoggedToday={hasLogToday}
+            currentDay={currentDay}
           />
-          <Button
-            onClick={handleDeleteChallenge}
-            variant="outline"
-            className="border-rose-200 hover:bg-rose-50 text-rose-600 hover:text-rose-700 font-bold px-4 py-2 rounded-full text-xs shadow-sm transition-all duration-200 cursor-pointer"
-          >
-            Xóa thử thách
-          </Button>
+          <div className="flex items-center gap-3 flex-wrap justify-end w-full">
+            {challenge.streak > 0 && (
+              <div className="inline-flex items-center gap-1.5 bg-primary-bg border border-primary-border px-4 py-2 rounded-full text-sm font-bold text-primary font-mono shadow-sm">
+                <Flame className="w-4 h-4 animate-float" />
+                <span>{challenge.streak} ngày streak</span>
+              </div>
+            )}
+            <EditChallengeDialog
+              initialTitle={challenge.title}
+              initialTotalDays={challenge.totalDays}
+              isOpen={isEditDialogOpen}
+              onOpenChange={setIsEditDialogOpen}
+              onEdit={handleEditChallenge}
+            />
+            <Button
+              onClick={handleDeleteChallenge}
+              variant="outline"
+              className="border-rose-200 hover:bg-rose-50 text-rose-600 hover:text-rose-700 font-bold px-4 py-2 rounded-full text-xs shadow-sm transition-all duration-200 cursor-pointer"
+            >
+              Xóa thử thách
+            </Button>
+          </div>
         </div>
       </div>
 
@@ -818,14 +826,6 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
           </div>
         )}
       </div>
-
-      <CheerMascot
-        streak={challenge.streak}
-        isCompleted={isChallengeCompleted}
-        hasLoggedToday={hasLogToday}
-        flowerEmoji={challenge.flower.emoji}
-        currentDay={currentDay}
-      />
     </div>
   );
 }

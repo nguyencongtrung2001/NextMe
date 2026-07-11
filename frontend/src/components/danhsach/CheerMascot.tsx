@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import { cn } from "@/lib/utils";
 
 interface CheerMascotProps {
   streak: number;
   isCompleted: boolean;
   hasLoggedToday: boolean;
-  flowerEmoji: string;
   currentDay: number;
 }
 
@@ -15,52 +15,37 @@ export default function CheerMascot({
   streak,
   isCompleted,
   hasLoggedToday,
-  flowerEmoji,
   currentDay,
 }: CheerMascotProps) {
   const [quote, setQuote] = useState("");
   const [isBouncing, setIsBouncing] = useState(false);
   const [clickCount, setClickCount] = useState(0);
 
-  // Sinh danh sách câu nói dựa trên trạng thái hiện tại
   const getQuotes = () => {
     if (isCompleted) {
       return [
-        "Tuyệt đỉnh! Chúng ta đã cùng nhau vượt qua hành trình này! 🎉",
-        "Bạn đã xuất sắc hoàn thành mục tiêu! Tự hào quá đi mất!",
-        "Hành trình kết thúc nhưng thói quen tốt đã được gieo mầm!",
+        "Tuyệt đỉnh! Cậu siêu quá đi mất! 🎉",
+        "Chúng ta đã làm được rồi! Tự hào về cậu!",
       ];
     }
-    
     if (currentDay === 0) {
-      return [
-        "Thử thách chưa chính thức bắt đầu! Hẹn gặp bạn vào ngày mai nhé!",
-        "Hãy chuẩn bị tinh thần thật tốt cho ngày mai nhé!",
-        "Sắp tới lúc chúng ta cùng nhau cố gắng rồi!",
-      ];
+      return ["Chưa bắt đầu! Hẹn cậu ngày mai nhé!"];
     }
-
     if (!hasLoggedToday) {
       return [
-        "Này bạn ơi, hôm nay chưa tưới nước cho cây đâu đấy! Cố lên nhé!",
-        "Đừng quên nhiệm vụ hôm nay nha! Tôi luôn ở đây cổ vũ bạn!",
-        "Hôm nay bạn thấy thế nào? Hãy hoàn thành mục tiêu và check-in nhé!",
-        "Một chút nỗ lực hôm nay sẽ mang lại kết quả lớn ngày mai!",
+        "Nhớ tưới nước cho tớ hôm nay nhé!",
+        "Tớ chờ cậu nãy giờ nè, check-in đi!",
       ];
     }
-
     if (hasLoggedToday && streak >= 3) {
       return [
-        `Wow! 🔥 Chuỗi ${streak} ngày liên tiếp rồi! Bạn đang làm cực tốt!`,
-        `Tuyệt vời! Hãy giữ vững phong độ ${streak} ngày streak này nhé!`,
-        "Phong độ của bạn làm tôi thật sự ấn tượng đó!",
+        `Chuỗi ${streak} ngày rồi! Cậu đang cháy quá! 🔥`,
+        `Thật đáng kinh ngạc! Giữ vững phong độ nha!`,
       ];
     }
-
     return [
-      "Tuyệt vời! Hôm nay bạn đã làm rất tốt. Hãy nghỉ ngơi thật ngon nhé!",
-      "Nhiệm vụ hôm nay đã hoàn thành! Hẹn gặp lại bạn vào ngày mai!",
-      "Mỗi ngày một chút, bạn đang tốt lên rất nhiều đó!",
+      "Hôm nay cậu làm tốt lắm! Nghỉ ngơi thôi!",
+      "Nhiệm vụ hoàn thành! Chúc ngủ ngon nha!",
     ];
   };
 
@@ -80,43 +65,43 @@ export default function CheerMascot({
     setIsBouncing(true);
     pickRandomQuote();
     setClickCount((prev) => prev + 1);
-    
-    setTimeout(() => {
-      setIsBouncing(false);
-    }, 500); // Khớp với thời gian CSS animation
+    setTimeout(() => setIsBouncing(false), 500);
   };
 
   return (
-    <div className="fixed bottom-6 right-6 md:bottom-10 md:right-10 z-40 flex flex-col items-end gap-3 pointer-events-none">
+    <div className="relative flex items-center justify-end -mt-8 md:-mt-12 mb-2 z-10 w-full animate-fade-in pointer-events-none">
       {/* Speech Bubble */}
       <div 
         className={cn(
-          "bg-card border border-border shadow-lg rounded-2xl rounded-br-sm p-4 max-w-[200px] md:max-w-[240px] pointer-events-auto transition-all duration-300 animate-fade-up origin-bottom-right",
-          isBouncing ? "scale-105 shadow-xl" : "scale-100"
+          "bg-white dark:bg-stone-800 border border-border shadow-md rounded-2xl rounded-br-sm p-3 max-w-[200px] pointer-events-auto transition-all duration-300 mr-2 relative",
+          isBouncing ? "scale-105" : "scale-100"
         )}
       >
-        <p className="text-xs md:text-sm font-medium text-ink-2 leading-relaxed">
-          {clickCount >= 10 ? "Đừng chọc tôi nữa, lo làm nhiệm vụ đi kìa! 😂" : quote}
+        <p className="text-xs md:text-sm font-semibold text-ink-2 leading-snug">
+          {clickCount >= 10 ? "Trời ơi đừng chọc tớ nữa! 😂" : quote}
         </p>
       </div>
 
-      {/* Mascot Avatar */}
+      {/* Image Mascot */}
       <button
         onClick={handleInteract}
-        className="relative pointer-events-auto outline-none"
+        className="relative pointer-events-auto outline-none transition-transform duration-300 hover:scale-110 cursor-pointer flex-shrink-0"
         title="Nhấp vào để trò chuyện"
       >
         <div 
           className={cn(
-            "w-16 h-16 md:w-20 md:h-20 bg-surface border-4 border-white dark:border-stone-800 shadow-lg rounded-full flex items-center justify-center text-3xl md:text-4xl transition-transform duration-300 hover:scale-110 cursor-pointer",
-            isBouncing ? "animate-wobble scale-110" : "animate-float"
+            "w-20 h-20 md:w-24 md:h-24 relative overflow-hidden rounded-full border-4 border-white dark:border-stone-800 shadow-sm bg-white",
+            isBouncing ? "animate-wobble" : "animate-float"
           )}
         >
-          {flowerEmoji}
+          <Image 
+            src="/mascot.png" 
+            alt="Mascot" 
+            fill 
+            className="object-cover" 
+            unoptimized 
+          />
         </div>
-        
-        {/* Shadow under mascot */}
-        <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-10 h-3 bg-black/10 dark:bg-black/40 rounded-[50%] blur-sm pointer-events-none" />
       </button>
 
       <style jsx>{`
@@ -128,6 +113,21 @@ export default function CheerMascot({
         }
         .animate-wobble {
           animation: wobble 0.5s ease-in-out;
+        }
+        .animate-float {
+          animation: float 3s ease-in-out infinite;
+        }
+        @keyframes float {
+          0% { transform: translateY(0px); }
+          50% { transform: translateY(-5px); }
+          100% { transform: translateY(0px); }
+        }
+        .animate-fade-in {
+          animation: fadeIn 0.8s ease-out;
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
     </div>
