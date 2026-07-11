@@ -91,7 +91,7 @@ export default function CheerMascot({
         <div 
           className={cn(
             "w-20 h-20 md:w-24 md:h-24 relative overflow-hidden rounded-full border-4 border-white dark:border-stone-800 shadow-sm bg-white",
-            isBouncing ? "animate-wobble" : "animate-float"
+            isBouncing ? "animate-wobble" : "animate-walk"
           )}
         >
           <Image 
@@ -114,13 +114,15 @@ export default function CheerMascot({
         .animate-wobble {
           animation: wobble 0.5s ease-in-out;
         }
-        .animate-float {
-          animation: float 3s ease-in-out infinite;
+        .animate-walk {
+          animation: walk 4s ease-in-out infinite;
         }
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-5px); }
-          100% { transform: translateY(0px); }
+        @keyframes walk {
+          0% { transform: translateX(0px) translateY(0px); }
+          25% { transform: translateX(-15px) translateY(-5px) rotate(-5deg); }
+          50% { transform: translateX(0px) translateY(0px); }
+          75% { transform: translateX(15px) translateY(-5px) rotate(5deg); }
+          100% { transform: translateX(0px) translateY(0px); }
         }
         .animate-fade-in {
           animation: fadeIn 0.8s ease-out;
