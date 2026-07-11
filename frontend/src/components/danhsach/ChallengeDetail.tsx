@@ -19,7 +19,7 @@ import { Label } from "@/components/ui/label";
 import { layChiTietThuThach, guiCheckIn, xoaThuThach, capNhatThuThach, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
 import { MOOD_LIST } from "@/constants";
 import EditChallengeDialog from "./EditChallengeDialog";
-import CheerMascot from "./CheerMascot";
+import CoachMascot from "./CoachMascot";
 
 export interface Flower {
   name: string;
@@ -417,6 +417,13 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
         />
       ))}
 
+      {/* KÍCH HOẠT DORAEMON DUOLINGO STYLE TẠI ĐÂY */}
+      <CoachMascot 
+        progress={challenge.progress || 0}
+        isTodayCompleted={hasLogToday}
+        challengeTitle={challenge.title}
+      />
+
       {/* Detail Banner Card */}
       <div className="bg-card border border-border rounded-2xl p-6 md:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-[0_1px_3px_rgba(0,0,0,0.02)]">
         <div className="flex items-center gap-4 flex-wrap">
@@ -456,35 +463,27 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
           </div>
         </div>
 
-        <div className="flex flex-col items-end gap-2 shrink-0 relative w-full md:w-auto">
-          <CheerMascot
-            streak={challenge.streak}
-            isCompleted={isChallengeCompleted}
-            hasLoggedToday={hasLogToday}
-            currentDay={currentDay}
+        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+          {challenge.streak > 0 && (
+            <div className="inline-flex items-center gap-1.5 bg-primary-bg border border-primary-border px-4 py-2 rounded-full text-sm font-bold text-primary font-mono shadow-sm">
+              <Flame className="w-4 h-4 animate-float" />
+              <span>{challenge.streak} ngày streak</span>
+            </div>
+          )}
+          <EditChallengeDialog
+            initialTitle={challenge.title}
+            initialTotalDays={challenge.totalDays}
+            isOpen={isEditDialogOpen}
+            onOpenChange={setIsEditDialogOpen}
+            onEdit={handleEditChallenge}
           />
-          <div className="flex items-center gap-3 flex-wrap justify-end w-full">
-            {challenge.streak > 0 && (
-              <div className="inline-flex items-center gap-1.5 bg-primary-bg border border-primary-border px-4 py-2 rounded-full text-sm font-bold text-primary font-mono shadow-sm">
-                <Flame className="w-4 h-4 animate-float" />
-                <span>{challenge.streak} ngày streak</span>
-              </div>
-            )}
-            <EditChallengeDialog
-              initialTitle={challenge.title}
-              initialTotalDays={challenge.totalDays}
-              isOpen={isEditDialogOpen}
-              onOpenChange={setIsEditDialogOpen}
-              onEdit={handleEditChallenge}
-            />
-            <Button
-              onClick={handleDeleteChallenge}
-              variant="outline"
-              className="border-rose-200 hover:bg-rose-50 text-rose-600 hover:text-rose-700 font-bold px-4 py-2 rounded-full text-xs shadow-sm transition-all duration-200 cursor-pointer"
-            >
-              Xóa thử thách
-            </Button>
-          </div>
+          <Button
+            onClick={handleDeleteChallenge}
+            variant="outline"
+            className="border-rose-200 hover:bg-rose-50 text-rose-600 hover:text-rose-700 font-bold px-4 py-2 rounded-full text-xs shadow-sm transition-all duration-200 cursor-pointer"
+          >
+            Xóa thử thách
+          </Button>
         </div>
       </div>
 
