@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { layChiTietThuThach, guiCheckIn, xoaThuThach, capNhatThuThach, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
 import { MOOD_LIST } from "@/constants";
 import EditChallengeDialog from "./EditChallengeDialog";
+import CheerMascot from "./CheerMascot";
 
 export interface Flower {
   name: string;
@@ -817,6 +818,14 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
           </div>
         )}
       </div>
+
+      <CheerMascot
+        streak={challenge.streak}
+        isCompleted={isChallengeCompleted}
+        hasLoggedToday={hasLogToday}
+        flowerEmoji={challenge.flower.emoji}
+        currentDay={currentDay}
+      />
     </div>
   );
 }
