@@ -17,10 +17,18 @@ interface PomodoroTimerProps {
 }
 
 export default function PomodoroTimer({ onComplete }: PomodoroTimerProps) {
+  const [customMinutes, setCustomMinutes] = useState({
+    focus: 25,
+    shortBreak: 5,
+    longBreak: 15,
+  });
   const [mode, setMode] = useState<TimerMode>("focus");
-  const [timeLeft, setTimeLeft] = useState(MODES.focus.minutes * 60);
+  const [timeLeft, setTimeLeft] = useState(customMinutes.focus * 60);
   const [isActive, setIsActive] = useState(false);
   const [progress, setProgress] = useState(100);
+  
+  const [isEditing, setIsEditing] = useState(false);
+  const [editValue, setEditValue] = useState("");
 
   const audioCtxRef = useRef<AudioContext | null>(null);
 
@@ -59,7 +67,7 @@ export default function PomodoroTimer({ onComplete }: PomodoroTimerProps) {
       interval = setInterval(() => {
         setTimeLeft((prev) => {
           const next = prev - 1;
-          const totalSeconds = MODES[mode].minutes * 60;
+          const totalSeconds = customMinutes[mode] * 60;
           setProgress((next / totalSeconds) * 100);
           return next;
         });
@@ -76,7 +84,7 @@ export default function PomodoroTimer({ onComplete }: PomodoroTimerProps) {
     return () => {
       if (interval) clearInterval(interval);
     };
-  }, [isActive, timeLeft, mode, onComplete, playDing]);
+  }, [isActive, timeLeft, mode, onComplete, playDing, customMinutes]);
 
   const toggleTimer = () => {
     setIsActive(!isActive);
@@ -84,15 +92,40 @@ export default function PomodoroTimer({ onComplete }: PomodoroTimerProps) {
 
   const resetTimer = () => {
     setIsActive(false);
-    setTimeLeft(MODES[mode].minutes * 60);
+    setIsEditing(false);
+    setTimeLeft(customMinutes[mode] * 60);
     setProgress(100);
   };
 
   const changeMode = (newMode: TimerMode) => {
     setMode(newMode);
     setIsActive(false);
-    setTimeLeft(MODES[newMode].minutes * 60);
+    setIsEditing(false);
+    setTimeLeft(customMinutes[newMode] * 60);
     setProgress(100);
+  };
+
+  const handleEditTime = () => {
+    if (isActive) return;
+    setIsEditing(true);
+    setEditValue(customMinutes[mode].toString());
+  };
+
+  const handleSaveTime = () => {
+    let newMins = parseInt(editValue, 10);
+    if (isNaN(newMins) || newMins <= 0) newMins = 1;
+    if (newMins > 120) newMins = 120; // Giới hạn max 120 phút
+
+    setCustomMinutes((prev) => ({ ...prev, [mode]: newMins }));
+    setTimeLeft(newMins * 60);
+    setProgress(100);
+    setIsEditing(false);
+  };
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      handleSaveTime();
+    }
   };
 
   const formatTime = (seconds: number) => {
@@ -148,13 +181,40 @@ export default function PomodoroTimer({ onComplete }: PomodoroTimerProps) {
             strokeDashoffset={strokeDashoffset}
           />
         </svg>
-        <div className="absolute flex flex-col items-center justify-center pointer-events-none">
-          <span className={cn("text-5xl md:text-7xl font-bold font-mono tracking-tighter transition-colors", MODES[mode].color)}>
-            {formatTime(timeLeft)}
-          </span>
-          <span className="text-ink-4 text-xs mt-2 uppercase tracking-widest font-bold">
-            {isActive ? "Đang chạy..." : "Đang dừng"}
-          </span>
+        <div className="absolute flex flex-col items-center justify-center">
+          {isEditing ? (
+            <div className="flex flex-col items-center gap-2 pointer-events-auto">
+              <input 
+                type="number"
+                min="1"
+                max="120"
+                value={editValue}
+                onChange={(e) => setEditValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={handleSaveTime}
+                autoFocus
+                className="w-24 text-center text-4xl md:text-5xl font-bold font-mono tracking-tighter bg-surface border border-border rounded-lg outline-none focus:ring-2 focus:ring-primary"
+              />
+              <span className="text-ink-4 text-[10px] uppercase tracking-widest font-bold">Phút</span>
+            </div>
+          ) : (
+            <>
+              <span 
+                onClick={handleEditTime}
+                title={isActive ? "" : "Nhấn để sửa thời gian"}
+                className={cn(
+                  "text-5xl md:text-7xl font-bold font-mono tracking-tighter transition-colors select-none", 
+                  MODES[mode].color,
+                  !isActive && "cursor-pointer hover:opacity-80"
+                )}
+              >
+                {formatTime(timeLeft)}
+              </span>
+              <span className="text-ink-4 text-xs mt-2 uppercase tracking-widest font-bold pointer-events-none">
+                {isActive ? "Đang chạy..." : "Đang dừng"}
+              </span>
+            </>
+          )}
         </div>
       </div>
 
