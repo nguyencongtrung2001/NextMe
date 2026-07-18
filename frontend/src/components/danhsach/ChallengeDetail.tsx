@@ -19,6 +19,7 @@ import { Label } from "@/components/ui/label";
 import { layChiTietThuThach, guiCheckIn, xoaThuThach, capNhatThuThach, Challenge as BackendChallenge, Log as BackendLog, MediaFile as BackendMediaFile } from "@/api/thu_thach";
 import { MOOD_LIST } from "@/constants";
 import EditChallengeDialog from "./EditChallengeDialog";
+import PomodoroTimer from "./PomodoroTimer";
 
 export interface Flower {
   name: string;
@@ -100,7 +101,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
   const [challengeLogs, setChallengeLogs] = useState<Log[]>([]);
   const [isLoaded, setIsLoaded] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
-  const [activeTab, setActiveTab] = useState<"overview" | "history">("overview");
+  const [activeTab, setActiveTab] = useState<"overview" | "history" | "pomodoro">("overview");
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
 
   const handleEditChallenge = (title: string, totalDays: number) => {
@@ -496,7 +497,7 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
           <button
             onClick={() => setActiveTab("history")}
             className={cn(
-              "pb-3 text-sm font-bold border-b-2 transition-all duration-200 whitespace-nowrap cursor-pointer",
+              "pb-3 font-bold text-sm tracking-wide transition-colors whitespace-nowrap border-b-2",
               activeTab === "history"
                 ? "border-primary text-primary"
                 : "border-transparent text-ink-4 hover:text-ink"
@@ -504,7 +505,32 @@ export default function ChallengeDetail({ slug }: ChallengeDetailProps) {
           >
             Nhật ký hành trình
           </button>
+          <button
+            onClick={() => setActiveTab("pomodoro")}
+            className={cn(
+              "pb-3 font-bold text-sm tracking-wide transition-colors whitespace-nowrap border-b-2 flex items-center gap-2",
+              activeTab === "pomodoro"
+                ? "border-primary text-primary"
+                : "border-transparent text-ink-4 hover:text-ink"
+            )}
+          >
+            <span>🍅</span> Focus Mode
+          </button>
         </div>
+
+        {/* Tab 3: Pomodoro */}
+        {activeTab === "pomodoro" && (
+          <div className="flex flex-col gap-6 w-full animate-fade-up">
+            <PomodoroTimer 
+              onComplete={(mode) => {
+                if (mode === "focus") {
+                  setActiveTab("overview");
+                  window.scrollTo({ top: 0, behavior: "smooth" });
+                }
+              }}
+            />
+          </div>
+        )}
 
         {/* Tab 1: Overview */}
         {activeTab === "overview" && (
